@@ -18,7 +18,7 @@
   --border: rgba(255,255,255,0.08);
   --text: #e8e8f0;
   --muted: #666680;
-  --pad-h: 148px;
+  --pad-h: 192px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 html,body{height:100%;width:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
@@ -163,7 +163,8 @@ input[type=range].yellow::-webkit-slider-thumb{background:var(--c3);box-shadow:0
 .rec-btn:active{background:rgba(255,45,85,.12);}
 .rec-btn.recording{animation:rec-pulse 1.2s ease-in-out infinite;}
 .rec-btn-dot{width:7px;height:7px;border-radius:50%;background:var(--c2);}
-.pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;height:80px;}
+.pad-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;height:74px;}
+.viz-bar{width:100%;height:28px;border-radius:6px;background:var(--bg);display:block;margin-top:7px;}
 .pad{background:var(--bg2);border:1.5px solid rgba(255,255,255,.07);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;transition:border-color .08s,transform .08s,box-shadow .08s;position:relative;overflow:hidden;user-select:none;}
 .pad::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 110%,rgba(0,255,204,.1) 0%,transparent 65%);opacity:0;transition:.15s;}
 .pad.loaded{border-color:rgba(0,255,204,.18);}
@@ -338,6 +339,7 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
     <div class="pad" data-ch="3"><div class="pad-dot"></div><div class="pad-num">3</div><div class="pad-lbl">—</div></div>
     <div class="pad" data-ch="4"><div class="pad-dot"></div><div class="pad-num">4</div><div class="pad-lbl">—</div></div>
   </div>
+  <canvas id="viz-bar" class="viz-bar" width="600" height="28"></canvas>
 </div>
 
 <!-- ══ DESKTOP ══ -->
@@ -436,10 +438,8 @@ const S = {
   actx: null,
   beatEl: null,
   beatGain: null,
-  beatAn: null,        // AnalyserNode for visualiser
-  beatDetAn: null,     // separate AnalyserNode for beat detection (low freq, large fft)
+  beatAn: null,
   beatData: null,
-  beatDetData: null,
   playing: false,
   timerIv: null,
 
@@ -448,10 +448,6 @@ const S = {
 
   // Beat detection state
   det: {
-    energyHistory: [],
-    historySize: 43,
-    lastBeatTime: 0,
-    beatIntervals: [],
     detectedBpm: null,
     detectedInterval: null,
     nextBeatActx: 0,
@@ -504,27 +500,27 @@ function ensureActx() {
 document.body.addEventListener('touchstart', ensureActx, {once:true, passive:true});
 document.body.addEventListener('click', ensureActx, {once:true});
 
-// ── QUANTISE CLOCK ─────────────────────────────────────────────────────────────
-// Called whenever a beat occurs (from either detector or metronome).
-// Fires any pending pad and flashes all loaded pads.
+// ── QUANTISE CLOCK ────────────────────────────────────────────────────────────
 function onBeat() {
-  // Flash all loaded pads to the beat
+  // Flash all loaded pads
   document.querySelectorAll('[data-ch]').forEach(el => {
-    if (el.classList.contains('loaded') || el.classList.contains('active')) {
+    if (el.classList.contains('loaded') || el.classList.contains('active') || el.classList.contains('pending')) {
       el.classList.add('beat-flash');
-      setTimeout(() => el.classList.remove('beat-flash'), 130);
+      setTimeout(() => el.classList.remove('beat-flash'), 120);
     }
   });
 
-  // If a pad is held and pending → fire it now
+  // If a pad is pending (held, waiting for first beat) → fire it
   if (S.pending !== null) {
     const ch = S.pending;
     S.pending = null;
+    // Don't clear S.held — the finger is still down
     fireClip(ch);
+    // Fall through intentionally: after firing, if still held we'll restart on next beat
     return;
   }
 
-  // If a pad is actively held and already playing → restart from start point
+  // If a pad is held and its clip is active → restart it from its start point
   if (S.held !== null && S.active === S.held) {
     const vid = S.ch[S.held].video;
     if (vid) {
@@ -537,7 +533,6 @@ function onBeat() {
 // Actually start a clip playing immediately
 function fireClip(ch) {
   const vid = S.ch[ch].video;
-  // Deactivate any currently playing channel
   if (S.active && S.active !== ch) {
     const pv = S.ch[S.active].video;
     if (pv) pv.pause();
@@ -557,90 +552,122 @@ function fireClip(ch) {
   }
 }
 
-// ── BEAT DETECTION + SCHEDULER ───────────────────────────────────────────────
-// Phase 1: energy-spike detection to find beat intervals and estimate BPM.
-// Phase 2: once we have a stable BPM, switch to a lookahead Web Audio clock
-// that schedules beats precisely using AudioContext.currentTime — much tighter
-// than reacting to energy spikes frame-by-frame.
+// ── BEAT CLOCK ────────────────────────────────────────────────────────────────
+// We analyse the audio file offline (decodeAudioData) to find the beat interval,
+// then run a precise AudioContext-scheduled clock during playback.
+// This is far more reliable than real-time energy detection.
 
-const DETECT_THRESHOLD = 1.4;  // energy must be this × average to count as beat
-const MIN_GAP = 0.22;           // minimum seconds between detected beats (~273 BPM)
-const LOOKAHEAD = 0.1;          // seconds ahead to schedule
-const STABLE_BEATS = 4;         // beats of consistent interval before switching to clock mode
+async function analyseAudioForBPM(arrayBuffer) {
+  const offlineCtx = new OfflineAudioContext(1, 1, 44100);
+  let decoded;
+  try {
+    decoded = await offlineCtx.decodeAudioData(arrayBuffer);
+  } catch(e) { return null; }
 
-function detectBeats() {
-  requestAnimationFrame(detectBeats);
-  if (!S.beatDetAn || !S.playing) return;
+  const data = decoded.getChannelData(0);
+  const sr   = decoded.sampleRate;
 
-  S.beatDetAn.getByteFrequencyData(S.beatDetData);
-
-  // Sub-bass energy (lowest ~10% of bins ≈ 0–100Hz at 44.1kHz/1024 fft)
-  const bins = Math.max(1, Math.floor(S.beatDetData.length * 0.10));
-  let energy = 0;
-  for (let i = 0; i < bins; i++) energy += S.beatDetData[i] * S.beatDetData[i];
-  energy /= bins;
-
-  const hist = S.det.energyHistory;
-  hist.push(energy);
-  if (hist.length > S.det.historySize) hist.shift();
-  if (hist.length < 8) return;
-
-  const avg = hist.reduce((a,b) => a+b, 0) / hist.length;
-  const now = performance.now() / 1000;
-
-  if (energy > avg * DETECT_THRESHOLD && (now - S.det.lastBeatTime) > MIN_GAP) {
-    const gap = now - S.det.lastBeatTime;
-    S.det.lastBeatTime = now;
-
-    if (gap < 2.5) {
-      S.det.beatIntervals.push(gap);
-      if (S.det.beatIntervals.length > 8) S.det.beatIntervals.shift();
-
-      // Median interval
-      const sorted = [...S.det.beatIntervals].sort((a,b) => a-b);
-      const median = sorted[Math.floor(sorted.length / 2)];
-      const bpm = Math.round(60 / median);
-      S.det.detectedBpm = bpm;
-      S.det.detectedInterval = median;
-      updateDetectedBpmUI(bpm);
-
-      // Flash BPM dot
-      ['bpm-dot-m','bpm-dot-d'].forEach(id => {
-        const el=$(id); if(!el) return;
-        el.classList.add('flash');
-        setTimeout(() => el.classList.remove('flash'), 80);
-      });
-
-      // Once we have enough consistent beats, seed the lookahead clock
-      if (S.det.beatIntervals.length >= STABLE_BEATS && S.det.clockSource === 'audio') {
-        // Seed next beat time at the AudioContext equivalent of right now
-        if (!S.det.clockSeeded) {
-          S.det.nextBeatActx = S.actx.currentTime + median;
-          S.det.clockSeeded = true;
-        }
-      }
-
-      // In early detection mode (no stable clock yet), fire onBeat directly from spike
-      if (S.det.clockSource === 'audio' && !S.det.clockSeeded) {
-        onBeat();
-      }
-    }
+  // Downsample to ~200Hz for speed
+  const step    = Math.floor(sr / 200);
+  const samples = [];
+  for (let i = 0; i < data.length; i += step) {
+    let sum = 0;
+    for (let j = i; j < Math.min(i+step, data.length); j++) sum += data[j]*data[j];
+    samples.push(Math.sqrt(sum/step));
   }
 
-  // Lookahead scheduler — once clock is seeded, fire beats on schedule
-  if (S.det.clockSeeded && S.det.clockSource === 'audio' && S.det.detectedInterval) {
-    while (S.det.nextBeatActx < S.actx.currentTime + LOOKAHEAD) {
-      // Schedule the beat at exactly nextBeatActx
-      const delay = Math.max(0, (S.det.nextBeatActx - S.actx.currentTime) * 1000);
-      const scheduledTime = S.det.nextBeatActx;
+  // Low-pass smooth: 5-sample moving average
+  const smoothed = [];
+  for (let i = 0; i < samples.length; i++) {
+    let s = 0, c = 0;
+    for (let j = Math.max(0,i-2); j <= Math.min(samples.length-1,i+2); j++) { s+=samples[j]; c++; }
+    smoothed.push(s/c);
+  }
+
+  // Find onset peaks: local maxima above a dynamic threshold
+  const windowSecs = 1.0; // 1-second local window
+  const windowFrames = Math.round(windowSecs * 200);
+  const onsets = [];
+  const minGapFrames = Math.round(0.25 * 200); // min 0.25s between onsets
+
+  for (let i = 2; i < smoothed.length - 2; i++) {
+    const v = smoothed[i];
+    if (v <= smoothed[i-1] || v <= smoothed[i+1]) continue; // not a local peak
+
+    // Local average in window
+    let localSum = 0;
+    const lo = Math.max(0, i - windowFrames/2);
+    const hi = Math.min(smoothed.length-1, i + windowFrames/2);
+    for (let j = lo; j <= hi; j++) localSum += smoothed[j];
+    const localAvg = localSum / (hi - lo + 1);
+
+    if (v < localAvg * 1.3) continue; // below threshold
+
+    // Enforce min gap
+    if (onsets.length > 0 && (i - onsets[onsets.length-1]) < minGapFrames) continue;
+
+    onsets.push(i);
+  }
+
+  if (onsets.length < 4) return null;
+
+  // Compute inter-onset intervals
+  const intervals = [];
+  for (let i = 1; i < onsets.length; i++) {
+    intervals.push((onsets[i] - onsets[i-1]) / 200); // in seconds
+  }
+
+  // Find dominant interval via histogram (cluster nearby intervals)
+  intervals.sort((a,b) => a-b);
+  const bucketSize = 0.03; // 30ms tolerance
+  let bestCount = 0, bestInterval = intervals[0];
+  for (let i = 0; i < intervals.length; i++) {
+    let count = 0, sum = 0;
+    for (let j = 0; j < intervals.length; j++) {
+      if (Math.abs(intervals[j] - intervals[i]) <= bucketSize) { count++; sum += intervals[j]; }
+    }
+    if (count > bestCount) { bestCount = count; bestInterval = sum/count; }
+  }
+
+  // Sanity check: 50–250 BPM
+  const bpm = 60 / bestInterval;
+  if (bpm < 50 || bpm > 250) return null;
+
+  return { interval: bestInterval, bpm: Math.round(bpm) };
+}
+
+// The running beat clock — fires onBeat() at each scheduled interval
+let beatClockRafId = null;
+
+function startBeatClock(interval) {
+  stopBeatClock();
+  S.det.detectedInterval = interval;
+  S.det.nextBeatActx = S.actx.currentTime + interval;
+  S.det.clockSeeded = true;
+
+  function tick() {
+    if (!S.playing || S.det.clockSource !== 'audio') return;
+    const now = S.actx.currentTime;
+    while (S.det.nextBeatActx <= now + 0.05) {
+      const delay = Math.max(0, (S.det.nextBeatActx - now) * 1000);
+      const t = S.det.nextBeatActx;
       setTimeout(() => {
-        // Only fire if audio is still playing and the scheduled time hasn't drifted too far
         if (S.playing && S.det.clockSource === 'audio') onBeat();
       }, delay);
-      S.det.nextBeatActx += S.det.detectedInterval;
+      S.det.nextBeatActx += interval;
     }
+    beatClockRafId = requestAnimationFrame(tick);
   }
+  beatClockRafId = requestAnimationFrame(tick);
 }
+
+function stopBeatClock() {
+  if (beatClockRafId) { cancelAnimationFrame(beatClockRafId); beatClockRafId = null; }
+  S.det.clockSeeded = false;
+}
+
+// Stub — no longer needed as real-time loop, kept for compatibility
+function detectBeats() { requestAnimationFrame(detectBeats); }
 
 function updateDetectedBpmUI(bpm) {
   ['det-bpm-m','det-bpm-d'].forEach(id => { const el=$(id); if(el) el.textContent = bpm; });
@@ -746,40 +773,45 @@ function setupBeat() {
   const barBtn = $('play-beat-bar');
   if (barBtn) barBtn.innerHTML = PLAY;
 
-  const onUp = e => {
+  const onUp = async e => {
     const f = e.target.files[0]; if (!f) return;
     ensureActx();
     if (S.beatEl) { S.beatEl.pause(); S.beatEl.currentTime = 0; }
+    stopBeatClock();
 
-    const audio = new Audio(URL.createObjectURL(f));
+    const url = URL.createObjectURL(f);
+    const audio = new Audio(url);
     audio.loop = false;
     S.beatEl = audio; S.playing = false;
+    S.det.detectedInterval = null; S.det.detectedBpm = null;
+    updateDetectedBpmUI('analysing…');
 
-    const src = S.actx.createMediaElementSource(audio);
+    // Audio graph: source → vizAn → gain → speakers
+    const src   = S.actx.createMediaElementSource(audio);
     const vizAn = S.actx.createAnalyser(); vizAn.fftSize = 64;
     S.beatAn = vizAn; S.beatData = new Uint8Array(vizAn.frequencyBinCount);
-
-    const detAn = S.actx.createAnalyser(); detAn.fftSize = 1024;
-    S.beatDetAn = detAn; S.beatDetData = new Uint8Array(detAn.frequencyBinCount);
-    S.det.energyHistory = []; S.det.beatIntervals = [];
-    S.det.detectedBpm = null; S.det.detectedInterval = null;
-    S.det.clockSeeded = false;
-    updateDetectedBpmUI('—');
-
     const gn = S.actx.createGain();
     gn.gain.value = parseFloat($('vol-beat-m')?.value || .7);
-    src.connect(detAn);
-    detAn.connect(vizAn);
-    vizAn.connect(gn);
-    gn.connect(S.actx.destination);
+    src.connect(vizAn); vizAn.connect(gn); gn.connect(S.actx.destination);
     S.beatGain = gn;
 
-    // When track ends naturally — rewind and reset to play state
+    // Offline BPM analysis
+    try {
+      const buf = await f.arrayBuffer();
+      const result = await analyseAudioForBPM(buf);
+      if (result) {
+        S.det.detectedInterval = result.interval;
+        S.det.detectedBpm = result.bpm;
+        updateDetectedBpmUI(result.bpm);
+      } else {
+        updateDetectedBpmUI('—');
+      }
+    } catch(err) { updateDetectedBpmUI('—'); }
+
     audio.addEventListener('ended', () => {
       audio.currentTime = 0;
       S.playing = false;
-      S.det.clockSeeded = false;
-      updateDetectedBpmUI('—');
+      stopBeatClock();
       if (barBtn) barBtn.innerHTML = PLAY;
       updateClockSource();
     });
@@ -794,21 +826,21 @@ function setupBeat() {
     if (!S.beatEl) return;
     S.playing = !S.playing;
     if (S.playing) {
-      S.beatEl.currentTime = 0;  // always from the beginning
+      S.beatEl.currentTime = 0;
       S.beatEl.play();
-      S.det.energyHistory = [];
-      S.det.beatIntervals = [];
-      S.det.lastBeatTime = 0;
-      S.det.clockSeeded = false;
-      S.det.detectedInterval = null;
+      if (S.det.detectedInterval) {
+        updateClockSource(); // set clockSource first
+        startBeatClock(S.det.detectedInterval);
+      } else {
+        updateClockSource();
+      }
     } else {
       S.beatEl.pause();
-      S.beatEl.currentTime = 0;  // rewind on stop
-      S.det.clockSeeded = false;
-      updateDetectedBpmUI('—');
+      S.beatEl.currentTime = 0;
+      stopBeatClock();
+      updateClockSource();
     }
     if (barBtn) barBtn.innerHTML = S.playing ? STOP : PLAY;
-    updateClockSource();
   };
 
   ['audio-m','audio-d'].forEach(id => $(id)?.addEventListener('change', onUp));
@@ -816,6 +848,11 @@ function setupBeat() {
   ['vol-beat-m','vol-beat-d'].forEach(id => {
     $(id)?.addEventListener('input', e => { if(S.beatGain) S.beatGain.gain.value=parseFloat(e.target.value); });
   });
+}
+
+function setBeatBtnUI(playing) {
+  const barBtn = $('play-beat-bar');
+  if (barBtn) barBtn.innerHTML = playing ? STOP : PLAY;
 }
 
 // ── VIDEO LOAD ────────────────────────────────────────────────────────────────
@@ -959,7 +996,7 @@ function stopAll() {
   document.querySelectorAll('[data-ch]').forEach(el => el.classList.remove('active','glow-active','pending'));
   S.active = null;
   ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity='1'; });
-  if (S.beatEl) { S.beatEl.pause(); S.beatEl.currentTime = 0; S.playing=false; updateClockSource(); }
+  if (S.beatEl) { S.beatEl.pause(); S.beatEl.currentTime = 0; S.playing=false; stopBeatClock(); updateClockSource(); }
   const barBtn = $('play-beat-bar'); if (barBtn) barBtn.innerHTML = PLAY;
   if (S.metro.on) metroToggle();
 }
@@ -1051,7 +1088,8 @@ function renderLoop() {
 // ── VISUALISER ────────────────────────────────────────────────────────────────
 function drawViz() {
   requestAnimationFrame(drawViz);
-  const cvs = $(mob()?'viz-m':'viz-d'); if(!cvs) return;
+  // Mobile uses the bar canvas; desktop uses the sidebar canvas
+  const cvs = $(mob() ? 'viz-bar' : 'viz-d'); if(!cvs) return;
   const ctx = cvs.getContext('2d'); ctx.clearRect(0,0,cvs.width,cvs.height);
   if (!S.beatAn || !S.playing) {
     ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
