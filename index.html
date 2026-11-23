@@ -233,6 +233,16 @@ input[type=range].pink::-webkit-slider-thumb{background:var(--c2);box-shadow:0 0
 
 @media(max-width:400px){.rec-timer-bar{display:none!important;}.padbar-top .sync-btn,.padbar-top .rec-btn{padding:6px 9px;font-size:9px;letter-spacing:.06em;}}
 
+/* clip volume rows */
+.ch-vol{display:flex;align-items:center;gap:8px;margin-top:-2px;}
+.ch-vol input[type=range]{flex:1;min-width:0;}
+.vol-mute{width:28px;height:28px;border-radius:50%;flex-shrink:0;background:transparent;border:1px solid var(--border);color:var(--muted);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;}
+.vol-mute svg{width:14px;height:14px;}
+.vol-mute:active{transform:scale(.9);}
+.vol-mute.muted{border-color:var(--c2);color:var(--c2);background:rgba(255,45,85,.08);}
+.base-vol{opacity:.35;pointer-events:none;}
+.base-card.loaded .base-vol{opacity:1;pointer-events:auto;}
+
 /* ══ ORGAN MODE ══ */
 .viz-row{display:flex;align-items:center;gap:7px;margin-top:7px;height:28px;}
 .viz-row .viz-bar{flex:1;min-width:0;width:auto;margin-top:0;height:28px;}
@@ -855,7 +865,7 @@ function setupFx() { buildFxPanel('m'); buildFxPanel('d'); syncFxUI(); }
 
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const S = {
-  ch: {1:{loaded:false},2:{loaded:false},3:{loaded:false},4:{loaded:false}},
+  ch: {1:{loaded:false,vol:1,muted:false},2:{loaded:false,vol:1,muted:false},3:{loaded:false,vol:1,muted:false},4:{loaded:false,vol:1,muted:false}},
   active: null,
   held: null,          // ch currently held by user
   quantise: true,      // beat-sync on/off
@@ -876,7 +886,7 @@ const S = {
         out:null, bus:null},
   gAn: null, gData: null,
   base: {loaded:false, loading:false, analysing:false, video:null, gain:null, url:null,
-         muted:false, sync:true, interval:null, phase:0, bpm:null, name:'', dur:0, harm:null},
+         muted:false, vol:1, sync:true, interval:null, phase:0, bpm:null, name:'', dur:0, harm:null},
   timerIv: null,
 
   // Metronome (click track only — never routed to recording)
@@ -913,6 +923,7 @@ function buildUI() {
       </div>
       <div class="ch-scrub"><span>START</span><span class="sv" id="sv-m-${c}">0%</span></div>
       <input type="range" id="scrub-m-${c}" min="0" max="100" value="0" disabled style="opacity:.3;">
+      <div class="ch-vol"><button class="vol-mute" id="mute-m-${c}" onclick="chMute(${c})" title="Mute CH${c}">${SPK}</button><input type="range" id="vol-m-${c}" min="0" max="1" step="0.05" value="1" oninput="chVol(${c},this.value)"></div>
     </div>`;
     dc.innerHTML += `
       <input type="file" id="vid-d-${c}" accept="video/*" onchange="loadVid(${c},this,'d')">
@@ -925,7 +936,8 @@ function buildUI() {
         <span class="d-scrub-lbl">START</span>
         <input type="range" id="scrub-d-${c}" min="0" max="100" value="0" disabled style="flex:1;opacity:.3;">
         <span class="d-scrub-val font-mono" id="sv-d-${c}">0%</span>
-      </div>`;
+      </div>
+      <div class="d-scrub-row" style="padding-top:0;"><button class="vol-mute" id="mute-d-${c}" onclick="chMute(${c})" title="Mute CH${c}">${SPK}</button><input type="range" id="vol-d-${c}" min="0" max="1" step="0.05" value="1" oninput="chVol(${c},this.value)" style="flex:1;"></div>`;
   }
 }
 
@@ -1795,6 +1807,7 @@ function buildBase() {
         <button class="sync-btn" id="base-mute-${p}" onclick="baseMuteToggle()"><div class="sync-btn-dot"></div><span>Mute base</span></button>
         <button class="sync-btn" id="base-sync-${p}" onclick="baseSyncToggle()"><div class="sync-btn-dot"></div><span>Sync to base</span></button>
       </div>
+      <div class="arow base-vol"><span class="albl">VOL</span><input type="range" id="base-vol-${p}" min="0" max="1" step="0.05" value="${S.base.vol}" oninput="baseVol(this.value)" style="flex:1;"></div>
     </div>`;
   ['m','d'].forEach(p => { const el=$(`base-slot-${p}`); if (el) el.innerHTML = `<div class="base-card" id="base-card-${p}">${inner(p)}</div>`; });
 }
@@ -1804,7 +1817,7 @@ function ensureBaseGraph() {
   const v = $('src-0');
   const node = S.actx.createMediaElementSource(v);
   const g = S.actx.createGain();
-  g.gain.value = S.base.muted ? 0 : 1;
+  g.gain.value = S.base.muted ? 0 : S.base.vol;
   node.connect(g); g.connect(S.actx.destination); g.connect(S.gAn);
   S.base.gain = g;
   v.addEventListener('ended', () => onPassEnd(v));
@@ -1868,8 +1881,13 @@ function clearBase() {
 
 function baseMuteToggle() {
   S.base.muted = !S.base.muted;
-  if (S.base.gain) S.base.gain.gain.value = S.base.muted ? 0 : 1;
+  if (S.base.gain) S.base.gain.gain.value = S.base.muted ? 0 : S.base.vol;
   updateBaseUI();
+}
+function baseVol(v) {
+  S.base.vol = +v;
+  if (S.base.gain && !S.base.muted) S.base.gain.gain.value = S.base.vol;
+  ['m','d'].forEach(p => { const s = $(`base-vol-${p}`); if (s && document.activeElement !== s) s.value = S.base.vol; });
 }
 function baseSyncToggle() {
   S.base.sync = !S.base.sync;
@@ -1897,6 +1915,28 @@ function updateNoSignal() {
   ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity = show ? '1' : '0'; });
 }
 
+// ── CLIP VOLUME / MUTE (each clip plays through its own gain) ─────────────────
+const SPK  = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M19 5a10 10 0 010 14"/></svg>`;
+const SPKX = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>`;
+function applyChGain(c) { const o = S.ch[c]; if (o.gain) o.gain.gain.value = o.muted ? 0 : o.vol; }
+function ensureClipGraph(c) {
+  const o = S.ch[c]; if (o.gain || !o.video) return;
+  ensureActx();
+  const node = S.actx.createMediaElementSource(o.video), g = S.actx.createGain();
+  node.connect(g); g.connect(S.actx.destination); g.connect(S.gAn);
+  o.gain = g; applyChGain(c);
+}
+function syncChUI(c) {
+  const o = S.ch[c];
+  ['m','d'].forEach(p => {
+    const b = $(`mute-${p}-${c}`), s = $(`vol-${p}-${c}`);
+    if (b) { b.classList.toggle('muted', o.muted); b.innerHTML = o.muted ? SPKX : SPK; }
+    if (s && document.activeElement !== s) s.value = o.vol;
+  });
+}
+function chVol(c, v)  { S.ch[c].vol = +v; if (S.ch[c].muted && +v > 0) S.ch[c].muted = false; applyChGain(c); syncChUI(c); }
+function chMute(c)    { S.ch[c].muted = !S.ch[c].muted; applyChGain(c); syncChUI(c); }
+
 // ── VIDEO LOAD ────────────────────────────────────────────────────────────────
 window.loadVid = (ch, input, plat) => {
   const f = input.files[0]; if (!f) return;
@@ -1910,6 +1950,7 @@ window.loadVid = (ch, input, plat) => {
   });
   src.onloadedmetadata = () => {
     S.ch[ch].video = src; S.ch[ch].loaded = true; S.ch[ch].dur = src.duration;
+    ensureClipGraph(ch);
     S.ch[ch].name = f.name.replace(/\.[^.]+$/, '').substring(0, 11).toUpperCase();
 
     // When clip ends naturally: if pad is still held, restart it (beat-sync-off loop)
@@ -2042,14 +2083,7 @@ async function startRec() {
   const dest = S.actx.createMediaStreamDestination();
 
   // Route video clip audio into recording
-  Object.values(S.ch).forEach(c => {
-    if (!c.video) return;
-    try {
-      const vs = c.video.captureStream?.();
-      const t  = vs?.getAudioTracks()[0];
-      if (t) S.actx.createMediaStreamSource(new MediaStream([t])).connect(dest);
-    } catch(e) {}
-  });
+  Object.values(S.ch).forEach(c => { if (c.gain) c.gain.connect(dest); });
 
   // Audio track + base video audio (a muted base has gain 0, so it is silent here too)
   if (S.beatGain) S.beatGain.connect(dest);
@@ -2069,6 +2103,7 @@ async function startRec() {
   S.mediaRec.onstop = () => {
     try { if(S.beatGain) S.beatGain.disconnect(dest); } catch(e) {}
     try { if(S.base.gain) S.base.gain.disconnect(dest); } catch(e) {}
+    Object.values(S.ch).forEach(c => { try { if (c.gain) c.gain.disconnect(dest); } catch(e) {} });
     try { if(S.org.out) S.org.out.disconnect(dest); } catch(e) {}
     stopAll();   // rewinds the backing so the next pass starts clean
     const t = S.mediaRec.mimeType||'video/webm', ext = t.includes('mp4')?'mp4':'webm';
