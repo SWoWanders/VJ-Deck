@@ -178,6 +178,19 @@ input[type=range].yellow::-webkit-slider-thumb{background:var(--c3);box-shadow:0
 .sync-btn:active{transform:scale(.95);}
 .sync-btn-dot{width:6px;height:6px;border-radius:50%;background:var(--c3);opacity:.3;transition:.15s;}
 .sync-btn.active .sync-btn-dot{opacity:1;box-shadow:0 0 5px var(--c3);}
+/* Howlround FX */
+.fx-btn{border-color:rgba(255,45,85,.35);}
+.fx-btn .sync-btn-dot{background:var(--c2);}
+.fx-btn.active{border-color:var(--c2);color:var(--c2);background:rgba(255,45,85,.08);}
+.fx-btn.active .sync-btn-dot{opacity:1;box-shadow:0 0 5px var(--c2);}
+.fx-looks{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.fx-looks::-webkit-scrollbar{display:none;}
+.fx-look{flex:none;padding:7px 11px;border-radius:16px;background:var(--bg2);border:1px solid var(--border);font-family:'Space Mono';font-size:10px;color:var(--muted);cursor:pointer;white-space:nowrap;}
+.fx-look.on{border-color:var(--c2);color:var(--c2);}
+.fx-row{display:flex;align-items:center;gap:10px;}
+.fx-row .albl{width:62px;}
+.fx-row .aval{color:var(--c2);min-width:40px;}
+input[type=range].pink::-webkit-slider-thumb{background:var(--c2);box-shadow:0 0 10px var(--c2);}
 /* quantise mode indicator — kept for desktop */
 .d-quant-badge{display:none;}
 
@@ -188,7 +201,7 @@ input[type=range].yellow::-webkit-slider-thumb{background:var(--c3);box-shadow:0
 .d-logo{font-family:'Bebas Neue';font-size:1.55rem;letter-spacing:.22em;color:var(--c);text-shadow:0 0 18px rgba(0,255,204,.4);}
 .d-logo em{color:var(--text);opacity:.3;font-style:normal;}
 .d-side-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;}
-.d-sec{background:var(--bg2);border:1px solid var(--border);border-radius:11px;overflow:hidden;}
+.d-sec{background:var(--bg2);border:1px solid var(--border);border-radius:11px;overflow:hidden;flex-shrink:0;}
 .d-sec-hdr{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .d-sec-lbl{font-family:'Space Mono';font-size:9px;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;}
 .d-sec-body{padding:11px 13px;display:flex;flex-direction:column;gap:9px;}
@@ -314,6 +327,10 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
         </div>
       </div>
     </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-lbl">Howlround FX</span><span class="font-mono" style="font-size:9px;color:var(--muted)">VIDEO FEEDBACK</span></div>
+      <div class="card-body" id="fx-panel-m"></div>
+    </div>
     <div style="height:6px;"></div>
   </div>
 </div>
@@ -324,6 +341,7 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
     <div class="rec-timer-bar" id="rec-timer-bar"><div class="rec-timer-dot"></div><span id="timer-bar" class="font-mono">00:00</span></div>
     <button class="play-btn" id="play-beat-bar" disabled style="flex-shrink:0;"></button>
     <button class="sync-btn" id="sync-btn-m" onclick="syncToggle()" style="margin-left:6px;"><div class="sync-btn-dot"></div><span>Beat Sync</span></button>
+    <button class="sync-btn fx-btn" id="fx-btn-m" onclick="fxToggle()" style="margin-left:6px;"><div class="sync-btn-dot"></div><span>FX</span></button>
     <button class="rec-btn" id="btn-rec-m" style="margin-left:8px;"><div class="rec-btn-dot"></div><span>Record</span></button>
   </div>
   <div class="pad-grid">
@@ -371,6 +389,10 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
         </div>
       </div>
       <div class="d-sec">
+        <div class="d-sec-hdr"><span class="d-sec-lbl">Howlround FX</span></div>
+        <div class="d-sec-body" id="fx-panel-d"></div>
+      </div>
+      <div class="d-sec">
         <div class="d-sec-hdr"><span class="d-sec-lbl">Video Channels</span></div>
         <div style="padding:9px;display:flex;flex-direction:column;gap:7px;" id="desk-channels"></div>
       </div>
@@ -386,6 +408,7 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
       </div>
       <div class="d-rec-area">
         <button class="sync-btn" id="sync-btn-d" onclick="syncToggle()"><div class="sync-btn-dot"></div><span>Beat Sync</span></button>
+        <button class="sync-btn fx-btn" id="fx-btn-d" onclick="fxToggle()"><div class="sync-btn-dot"></div><span>FX</span></button>
         <span class="d-rec-timer font-mono" id="timer-d">00:00</span>
         <button class="d-rec-btn" id="btn-rec-d"><div class="d-rec-dot"></div><span>REC</span></button>
       </div>
@@ -418,6 +441,348 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
 </div>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOWLROUND ENGINE v1 — analog video-feedback simulator (WebGL1, no deps)
+   Recreates the "camera pointed at its own monitor" loop:
+   each generation the previous frame is re-filmed slightly zoomed, rotated
+   and shifted, overdriven, colour-drifted and softened, then the live
+   source is keyed on top.  Runs entirely on the viewer's GPU.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function createHowlround(opt) {
+  opt = opt || {};
+  let W = opt.width || 854, H = opt.height || 480;
+  const canvas = opt.canvas || document.createElement('canvas');
+  canvas.width = W; canvas.height = H;
+  const gl = canvas.getContext('webgl', {preserveDrawingBuffer:true, alpha:false, antialias:false, premultipliedAlpha:false})
+          || canvas.getContext('experimental-webgl', {preserveDrawingBuffer:true, alpha:false});
+  if (!gl) return null;
+
+  const DEFAULTS = {
+    zoom: 1.03,      // apparent size of the monitor in the camera frame (>1 expands, <1 nested screens)
+    rotate: 1.5,     // degrees per generation (camera twisted on its axis)
+    offsetX: 0, offsetY: 0, // shift per generation (camera aimed off-centre)
+    centerX: 0, centerY: 0, // point the tunnel converges on
+    decay: 0.96,     // persistence (how much of the old image survives)
+    contrast: 1.25,  // camera overdrive / gain
+    bright: 0.0,
+    sat: 1.0,        // 0 = monochrome
+    hue: 3,          // degrees of colour drift per generation
+    chroma: 0.0,     // tube-camera RGB misregistration
+    blur: 0.6,       // optical softness in pixels
+    warp: 0.2,       // smoke / turbulence
+    invert: 0,       // negative picture (display only, never strobes)
+    edge: 0,         // 0 black room, 1 mirror, 2 wrap
+    frame: 0,        // brightness of the monitor's bezel edge (makes nested screens)
+    srcMix: 1.0,     // how strongly the live source cuts in
+    key: 0.35,       // luma key threshold (only brighter parts of the source cut in)
+    keySoft: 0.15,
+    mode: 0,         // 0 key, 1 add, 2 lighten
+    drift: 0.0,      // slow automatic camera wander
+    speed: 1,        // generations per frame
+    grain: 0.02,
+    scan: 0.0, vignette: 0.25, glow: 0.3   // display only, not fed back
+  };
+  const P = Object.assign({}, DEFAULTS, opt.params || {});
+
+  const VS = 'attribute vec2 p;varying vec2 v;void main(){v=p*.5+.5;gl_Position=vec4(p,0.,1.);}';
+  const PREC = '#ifdef GL_FRAGMENT_PRECISION_HIGH\nprecision highp float;\n#else\nprecision mediump float;\n#endif\n';
+  const FB = PREC + `
+varying vec2 v;
+uniform sampler2D uPrev,uSrc;
+uniform vec2 uRes,uOffset,uCenter;
+uniform float uZoom,uRot,uDecay,uHue,uContrast,uBright,uSat,uChroma,uBlur,uWarp,uTime,uSrcMix,uKey,uKeySoft,uEdge,uMode,uGrain,uHasSrc,uFrame;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+  return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.,1.)),f.x),f.y);}
+vec2 xf(vec2 uv,float z){
+  float a=uRes.x/uRes.y; vec2 q=uv-.5-uCenter; q.x*=a;
+  float c=cos(uRot),s=sin(uRot); q=mat2(c,-s,s,c)*q/z; q.x/=a;
+  return q+.5+uCenter-uOffset;}
+vec3 S(vec2 uv){
+  if(uEdge>1.5) uv=fract(uv);
+  else if(uEdge>.5) uv=1.-abs(1.-mod(uv,2.));
+  else {
+    vec2 d=min(uv,1.-uv); float m=min(d.x*uRes.x/uRes.y,d.y);
+    if(m<0.) return vec3(0.);
+    if(uFrame>0.&&m<.02) return vec3(uFrame*smoothstep(0.,.006,m));
+  }
+  return texture2D(uPrev,uv).rgb;}
+vec3 B(vec2 uv){
+  if(uBlur<.01) return S(uv);
+  vec2 px=uBlur/uRes;
+  return (S(uv)*2.+S(uv+vec2(px.x,0.))+S(uv-vec2(px.x,0.))+S(uv+vec2(0.,px.y))+S(uv-vec2(0.,px.y)))/6.;}
+vec3 hueRot(vec3 c,float a){const vec3 k=vec3(.57735);float ca=cos(a);return c*ca+cross(k,c)*sin(a)+k*dot(k,c)*(1.-ca);}
+void main(){
+  vec2 w=vec2(noise(v*9.+vec2(uTime*.6,0.)),noise(v*9.+vec2(3.7,uTime*.57)))-.5;
+  w+=.5*(vec2(noise(v*23.+vec2(0.,uTime*1.1)),noise(v*23.+vec2(8.1,-uTime)))-.5);
+  vec2 b=v+w*uWarp*.006;
+  vec3 col;
+  if(uChroma<.0005){ col=B(xf(b,uZoom)); }
+  else { col.r=B(xf(b,uZoom*(1.+uChroma))).r; col.g=B(xf(b,uZoom)).g; col.b=B(xf(b,uZoom*(1.-uChroma))).b; }
+  col=hueRot(col,uHue);
+  float l=dot(col,vec3(.299,.587,.114));
+  col=mix(vec3(l),col,uSat);
+  col=(col-.5)*uContrast+.5+uBright;
+  vec3 hi=max(col-.8,0.); col=min(col,.8)+hi/(1.+5.*hi);
+  col*=uDecay;
+  if(uHasSrc>.5){
+    vec3 s=texture2D(uSrc,v).rgb;
+    float sl=dot(s,vec3(.299,.587,.114));
+    if(uMode<.5){ float k=smoothstep(uKey-uKeySoft,uKey+uKeySoft,sl)*uSrcMix; col=mix(col,s,k); }
+    else if(uMode<1.5){ col+=s*uSrcMix; }
+    else { col=max(col,s*uSrcMix); }
+  }
+  col+=(hash(v*uRes+fract(uTime)*91.)-.5)*(1.5/255.+uGrain);
+  gl_FragColor=vec4(clamp(col,0.,1.),1.);
+}`;
+  const DS = PREC + `
+varying vec2 v;
+uniform sampler2D uTex; uniform vec2 uRes; uniform float uScan,uVig,uGlow,uInvert;
+void main(){
+  vec3 c=texture2D(uTex,v).rgb;
+  if(uGlow>.01){vec2 px=2.5/uRes;
+    vec3 g=(texture2D(uTex,v+px).rgb+texture2D(uTex,v-px).rgb+texture2D(uTex,v+vec2(px.x,-px.y)).rgb+texture2D(uTex,v+vec2(-px.x,px.y)).rgb)*.25;
+    c+=max(g-.55,0.)*uGlow*1.6;}
+  c=mix(c,1.-c,uInvert);
+  float sl=.5+.5*sin(v.y*240.*6.28318);
+  c*=1.-uScan*.45*(1.-sl);
+  vec2 d=v-.5; c*=1.-uVig*dot(d,d)*1.8;
+  gl_FragColor=vec4(clamp(c,0.,1.),1.);
+}`;
+
+  function sh(type, src) {
+    const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error('Howlround shader: ' + gl.getShaderInfoLog(s));
+    return s;
+  }
+  function prog(fs) {
+    const p = gl.createProgram();
+    gl.attachShader(p, sh(gl.VERTEX_SHADER, VS)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+    gl.bindAttribLocation(p, 0, 'p'); gl.linkProgram(p);
+    if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error('Howlround link: ' + gl.getProgramInfoLog(p));
+    const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < n; i++) { const nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+    return {p, u};
+  }
+  const fbP = prog(FB), dsP = prog(DS);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+  function mkTex(w, h) {
+    const t = gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D, t);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    if (w) gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    return t;
+  }
+  let tex = [], fbo = [], cur = 0;
+  function alloc() {
+    tex.forEach(t => gl.deleteTexture(t)); fbo.forEach(f => gl.deleteFramebuffer(f));
+    tex = [mkTex(W, H), mkTex(W, H)];
+    fbo = tex.map(t => { const f = gl.createFramebuffer(); gl.bindFramebuffer(gl.FRAMEBUFFER, f);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, t, 0);
+      gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT); return f; });
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+  alloc();
+  const srcTex = mkTex(0, 0);
+  let hasSrc = false;
+
+  let t0 = performance.now(), pulse = 0, lost = false;
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); lost = true; });
+
+  function setSource(el) {
+    hasSrc = false;
+    if (!el) return;
+    const w = el.videoWidth || el.naturalWidth || el.width, h = el.videoHeight || el.naturalHeight || el.height;
+    if (!w || !h) return;
+    if (el.readyState !== undefined && el.readyState < 2) return;
+    gl.bindTexture(gl.TEXTURE_2D, srcTex);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    try { gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, el); hasSrc = true; } catch (e) { hasSrc = false; }
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+  }
+
+  function step(time) {
+    const u = fbP.u, dr = P.drift, pk = pulse;
+    const rot = (P.rotate + Math.sin(time * .13) * dr * 3 + pk * 6) * Math.PI / 180;
+    const zoom = P.zoom * (1 + Math.sin(time * .29) * dr * .03 + pk * .05);
+    const cx = P.centerX + Math.sin(time * .21) * dr * .12, cy = P.centerY + Math.cos(time * .17) * dr * .1;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo[1 - cur]);
+    gl.viewport(0, 0, W, H);
+    gl.useProgram(fbP.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(u.uPrev, 0);
+    gl.activeTexture(gl.TEXTURE1); gl.bindTexture(gl.TEXTURE_2D, srcTex); gl.uniform1i(u.uSrc, 1);
+    gl.uniform2f(u.uRes, W, H);
+    gl.uniform2f(u.uOffset, P.offsetX, P.offsetY);
+    gl.uniform2f(u.uCenter, cx, cy);
+    gl.uniform1f(u.uZoom, Math.max(.2, zoom));
+    gl.uniform1f(u.uRot, rot);
+    gl.uniform1f(u.uDecay, P.decay);
+    gl.uniform1f(u.uHue, (P.hue + pk * 25) * Math.PI / 180);
+    gl.uniform1f(u.uContrast, P.contrast);
+    gl.uniform1f(u.uBright, P.bright + pk * .06);
+    gl.uniform1f(u.uSat, P.sat);
+    gl.uniform1f(u.uChroma, P.chroma);
+    gl.uniform1f(u.uBlur, P.blur);
+    gl.uniform1f(u.uWarp, P.warp);
+    gl.uniform1f(u.uTime, time);
+    gl.uniform1f(u.uSrcMix, P.srcMix);
+    gl.uniform1f(u.uKey, P.key);
+    gl.uniform1f(u.uKeySoft, Math.max(.01, P.keySoft));
+    gl.uniform1f(u.uEdge, P.edge);
+    gl.uniform1f(u.uMode, P.mode);
+    gl.uniform1f(u.uGrain, P.grain);
+    gl.uniform1f(u.uFrame, P.edge === 0 ? P.frame : 0);
+    gl.uniform1f(u.uHasSrc, hasSrc && P.srcMix > 0 ? 1 : 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    cur = 1 - cur;
+  }
+
+  function display() {
+    const u = dsP.u;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.useProgram(dsP.p);
+    gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, tex[cur]); gl.uniform1i(u.uTex, 0);
+    gl.uniform2f(u.uRes, W, H);
+    gl.uniform1f(u.uScan, P.scan); gl.uniform1f(u.uVig, P.vignette); gl.uniform1f(u.uGlow, P.glow); gl.uniform1f(u.uInvert, P.invert ? 1 : 0);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  }
+
+  return {
+    canvas, params: P, defaults: DEFAULTS,
+    get ok() { return !lost && !gl.isContextLost(); },
+    set(o) { Object.assign(P, o); },
+    /** Run one frame. source = video / image / canvas element (or null for no new input). */
+    render(source) {
+      if (lost || gl.isContextLost()) return false;
+      setSource(source);
+      const time = (performance.now() - t0) / 1000;
+      const n = Math.max(1, Math.min(4, Math.round(P.speed)));
+      for (let i = 0; i < n; i++) step(time + i * .016);
+      display();
+      pulse *= .86; if (pulse < .002) pulse = 0;
+      return true;
+    },
+    /** Beat hit: briefly lunges zoom / twist / colour. */
+    kick(a) { pulse = Math.min(1.5, pulse + (a == null ? 1 : a)); },
+    clear() {
+      fbo.forEach(f => { gl.bindFramebuffer(gl.FRAMEBUFFER, f); gl.clearColor(0,0,0,1); gl.clear(gl.COLOR_BUFFER_BIT); });
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    },
+    resize(w, h) { W = w; H = h; canvas.width = w; canvas.height = h; alloc(); },
+    get width() { return W; }, get height() { return H; }
+  };
+}
+
+/* Looks inspired by broadcast feedback graphics of the 60s–80s */
+const HOWLROUND_PRESETS = {
+  'Vortex ’63': {zoom:0.975, rotate:6, offsetX:0, offsetY:0, decay:0.99, contrast:1.22, bright:0, sat:0, hue:0, chroma:0, blur:2, warp:2.5, invert:0, edge:0, frame:0, srcMix:1, key:0.4, keySoft:0.2, mode:0, drift:0.35, speed:1, grain:0.02, scan:0.35, vignette:0.5, glow:0.5},
+  'Tunnel of Screens': {zoom:0.88, rotate:1.2, offsetX:0, offsetY:0, decay:0.985, contrast:1.0, bright:0, sat:1.1, hue:3, chroma:0, blur:0.3, warp:0, invert:0, edge:0, frame:0.85, srcMix:1, key:0.08, keySoft:0.06, mode:0, drift:0.2, speed:1, grain:0.015, scan:0.25, vignette:0.3, glow:0.25},
+  'Colour Seventies': {zoom:0.975, rotate:-4, offsetX:0, offsetY:0, decay:0.975, contrast:1.08, bright:0, sat:1.3, hue:6, chroma:0.012, blur:1, warp:0.6, invert:0, edge:0, frame:0, srcMix:1, key:0.4, keySoft:0.2, mode:0, drift:0.3, speed:1, grain:0.02, scan:0.3, vignette:0.4, glow:0.5},
+  'Pop Studio ’80s': {zoom:0.93, rotate:7, offsetX:0, offsetY:0, decay:0.985, contrast:1.2, bright:0.01, sat:1.7, hue:14, chroma:0.006, blur:0.4, warp:0.1, invert:0, edge:0, frame:0.6, srcMix:1, key:0.3, keySoft:0.12, mode:0, drift:0.15, speed:1, grain:0.015, scan:0.2, vignette:0.3, glow:0.55},
+  'Spiral Mandala':    {zoom:0.965, rotate:16, offsetX:0, offsetY:0, decay:0.97, contrast:1.15, bright:0, sat:1.4, hue:9, chroma:0.004, blur:0.6, warp:0, invert:0, edge:1, frame:0, srcMix:1, key:0.3, keySoft:0.15, mode:0, drift:0.1, speed:1, grain:0.01, scan:0, vignette:0.35, glow:0.4},
+  'Negative Kaleido':  {zoom:0.97, rotate:-11, offsetX:0, offsetY:0, decay:0.975, contrast:1.12, bright:0, sat:1.3, hue:-8, chroma:0.006, blur:0.7, warp:0.2, invert:1, edge:1, frame:0, srcMix:1, key:0.35, keySoft:0.15, mode:0, drift:0.2, speed:1, grain:0.015, scan:0.25, vignette:0.35, glow:0.2},
+  'Ghost Trails':      {zoom:1.0, rotate:0, offsetX:0, offsetY:0, decay:0.94, contrast:1.0, bright:0, sat:1.1, hue:2.5, chroma:0, blur:0.5, warp:0, invert:0, edge:0, frame:0, srcMix:1, key:0.12, keySoft:0.1, mode:2, drift:0, speed:1, grain:0.008, scan:0.15, vignette:0.25, glow:0.3},
+  'Fractal Drift':     {zoom:0.9, rotate:9, offsetX:0.025, offsetY:0.01, decay:0.98, contrast:1.15, bright:0, sat:1.5, hue:7, chroma:0.005, blur:0.4, warp:0.05, invert:0, edge:2, frame:0, srcMix:1, key:0.3, keySoft:0.12, mode:0, drift:0.3, speed:1, grain:0.01, scan:0.1, vignette:0.3, glow:0.35},
+  'Smoke Ring': {zoom:1.02, rotate:2, offsetX:0, offsetY:0, decay:0.985, contrast:1.15, bright:0, sat:0.7, hue:1.5, chroma:0.008, blur:2.5, warp:3, invert:0, edge:0, frame:0, srcMix:1, key:0.35, keySoft:0.2, mode:0, drift:0.4, speed:2, grain:0.02, scan:0.2, vignette:0.55, glow:0.6}
+};
+
+// ── HOWLROUND FX (VJDECK) ─────────────────────────────────────────────────────
+// Runs every rendered frame through the feedback engine and paints it back
+// onto the output canvas, so it shows in the preview AND in recordings.
+const FX = { on:false, look:'Vortex \u201963', beat:true, beatAmt:0.6 };
+let HR = null, HR_FAILED = false;
+function ensureHR() {
+  if (HR || HR_FAILED) return HR;
+  try { HR = createHowlround({width:640, height:360, params:HOWLROUND_PRESETS[FX.look]}); } catch(e) { console.error(e); HR = null; }
+  if (!HR) HR_FAILED = true;
+  return HR;
+}
+const FX_SLIDERS = [
+  ['zoom','Zoom',.8,1.2,.001,v=>(+v).toFixed(3)],
+  ['rotate','Twist',-25,25,.1,v=>(+v).toFixed(1)+'°'],
+  ['decay','Persist',.85,1.01,.001,v=>(+v).toFixed(3)],
+  ['hue','Colour',-25,25,.1,v=>(+v).toFixed(1)+'°'],
+  ['warp','Smoke',0,4,.01,v=>(+v).toFixed(2)],
+  ['srcMix','Clip in',0,1.5,.01,v=>Math.round(v*100)+'%']
+];
+function fxParams() { return HR ? HR.params : Object.assign({}, HOWLROUND_PRESETS[FX.look]); }
+function buildFxPanel(sfx) {
+  const box = $('fx-panel-'+sfx); if (!box) return;
+  const p = fxParams();
+  box.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div><span style="font-size:12px;font-weight:500;">Howlround</span>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Camera-at-monitor feedback · recorded</div></div>
+      <div class="mtoggle" style="flex:none;width:96px;margin-left:10px;"><button id="fx-off-${sfx}" class="on" onclick="fxToggle(false)">OFF</button><button id="fx-on-${sfx}" onclick="fxToggle(true)">ON</button></div>
+    </div>
+    <div class="fx-looks" id="fx-looks-${sfx}">${Object.keys(HOWLROUND_PRESETS).map(n=>`<div class="fx-look" data-look="${n}">${n}</div>`).join('')}</div>
+    ${FX_SLIDERS.map(([k,l,mi,ma,st,fm])=>`<div class="fx-row"><span class="albl">${l.toUpperCase()}</span><input type="range" class="pink" id="fx-${k}-${sfx}" min="${mi}" max="${ma}" step="${st}" value="${p[k]}" style="flex:1;"><span class="aval" id="fx-${k}-v-${sfx}">${fm(p[k])}</span></div>`).join('')}
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div><span style="font-size:12px;font-weight:500;">Beat kick</span>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px;">Lunges on each beat (needs Beat Sync)</div></div>
+      <div class="mtoggle" style="flex:none;width:96px;margin-left:10px;"><button id="fx-boff-${sfx}" onclick="fxBeat(false)">OFF</button><button id="fx-bon-${sfx}" class="on" onclick="fxBeat(true)">ON</button></div>
+    </div>
+    <div class="fx-row"><span class="albl">KICK</span><input type="range" class="pink" id="fx-kick-${sfx}" min="0" max="1.5" step="0.05" value="${FX.beatAmt}" style="flex:1;"><span class="aval" id="fx-kick-v-${sfx}">${Math.round(FX.beatAmt*100)}%</span></div>
+    <button class="beat-upload" id="fx-clear-${sfx}">Clear feedback</button>`;
+  box.querySelectorAll('.fx-look').forEach(el => el.addEventListener('click', () => fxLook(el.dataset.look)));
+  FX_SLIDERS.forEach(([k,,,,,fm]) => {
+    $(`fx-${k}-${sfx}`).addEventListener('input', e => {
+      const v = parseFloat(e.target.value);
+      if (ensureHR()) HR.params[k] = v;
+      FX.look = null; syncFxUI();
+    });
+  });
+  $(`fx-kick-${sfx}`).addEventListener('input', e => { FX.beatAmt = parseFloat(e.target.value); syncFxUI(); });
+  $(`fx-clear-${sfx}`).addEventListener('click', () => { if (HR) { HR.clear(); showToast('Feedback cleared','success'); } else showToast('Turn FX on first','error'); });
+}
+function syncFxUI() {
+  const p = fxParams();
+  ['m','d'].forEach(sfx => {
+    const on = $(`fx-on-${sfx}`), off = $(`fx-off-${sfx}`);
+    if (on) { on.classList.toggle('on', FX.on); off.classList.toggle('on', !FX.on); }
+    const bon = $(`fx-bon-${sfx}`), boff = $(`fx-boff-${sfx}`);
+    if (bon) { bon.classList.toggle('on', FX.beat); boff.classList.toggle('on', !FX.beat); }
+    document.querySelectorAll(`#fx-looks-${sfx} .fx-look`).forEach(el => el.classList.toggle('on', el.dataset.look === FX.look));
+    FX_SLIDERS.forEach(([k,,,,,fm]) => {
+      const i = $(`fx-${k}-${sfx}`), v = $(`fx-${k}-v-${sfx}`);
+      if (i && document.activeElement !== i) i.value = p[k];
+      if (v) v.textContent = fm(p[k]);
+    });
+    const ki = $(`fx-kick-${sfx}`), kv = $(`fx-kick-v-${sfx}`);
+    if (ki && document.activeElement !== ki) ki.value = FX.beatAmt;
+    if (kv) kv.textContent = Math.round(FX.beatAmt*100)+'%';
+  });
+  ['fx-btn-m','fx-btn-d'].forEach(id => { const el=$(id); if(el) el.classList.toggle('active', FX.on); });
+  updateNoSig();
+}
+function updateNoSig() {
+  ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity = (S.active || FX.on) ? '0' : '1'; });
+}
+window.fxToggle = function(force) {
+  const want = typeof force === 'boolean' ? force : !FX.on;
+  if (want && !ensureHR()) { showToast('FX needs WebGL — not available here','error'); return; }
+  FX.on = want;
+  if (!want && HR) HR.clear();
+  syncFxUI();
+  showToast(want ? 'Howlround FX on' : 'Howlround FX off', 'success');
+};
+window.fxBeat = function(on) { FX.beat = on; syncFxUI(); if (on && !S.quantise) showToast('Turn on Beat Sync for kicks','success'); };
+function fxLook(name) {
+  FX.look = name;
+  if (ensureHR()) { HR.set(Object.assign({}, HR.defaults, HOWLROUND_PRESETS[name])); HR.clear(); }
+  syncFxUI();
+  showToast(name, 'success');
+}
+function setupFx() { buildFxPanel('m'); buildFxPanel('d'); syncFxUI(); }
+
 // ── STATE ─────────────────────────────────────────────────────────────────────
 const S = {
   ch: {1:{loaded:false},2:{loaded:false},3:{loaded:false},4:{loaded:false}},
@@ -494,6 +859,7 @@ document.body.addEventListener('click', ensureActx, {once:true});
 
 // ── QUANTISE CLOCK ────────────────────────────────────────────────────────────
 function onBeat() {
+  if (FX.on && FX.beat && HR) HR.kick(FX.beatAmt);
   if (!S.quantise) return;
 
   // Flash loaded/active pads
@@ -922,7 +1288,7 @@ function triggerRelease(ch) {
     document.querySelectorAll(`[data-ch="${ch}"]`).forEach(el =>
       el.classList.remove('active', 'glow-active'));
     S.active = null;
-    ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity='1'; });
+    updateNoSig();
   }
 }
 
@@ -951,7 +1317,7 @@ function stopAll() {
   Object.values(S.ch).forEach(c => { if(c.video) c.video.pause(); });
   document.querySelectorAll('[data-ch]').forEach(el => el.classList.remove('active','glow-active'));
   S.active = null;
-  ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity='1'; });
+  updateNoSig();
   if (S.beatEl) { S.beatEl.pause(); S.beatEl.currentTime = 0; S.playing=false; stopBeatClock(); updateClockSource(); }
   const barBtn = $('play-beat-bar'); if (barBtn) barBtn.innerHTML = PLAY;
   if (S.metro.on) metroToggle();
@@ -1037,6 +1403,8 @@ function renderLoop() {
         ctx.drawImage(v, (cvs.width-v.videoWidth*sc)/2, (cvs.height-v.videoHeight*sc)/2, v.videoWidth*sc, v.videoHeight*sc);
       }
     }
+    // Howlround: feed this frame into the feedback loop, paint the result back
+    if (FX.on && HR && HR.render(cvs)) ctx.drawImage(HR.canvas, 0, 0, cvs.width, cvs.height);
   }
   requestAnimationFrame(renderLoop);
 }
@@ -1074,7 +1442,7 @@ function showToast(msg, type='error') {
 function fmt(s){return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-buildUI(); setupMetro(); setupBeat(); setupTriggers(); setupRec(); initSyncUI();
+buildUI(); setupMetro(); setupBeat(); setupTriggers(); setupRec(); initSyncUI(); setupFx();
 requestAnimationFrame(renderLoop);
 requestAnimationFrame(drawViz);
 requestAnimationFrame(detectBeats);
