@@ -148,7 +148,7 @@ input[type=range].yellow::-webkit-slider-thumb{background:var(--c3);box-shadow:0
 
 /* ══ STICKY PAD BAR ══ */
 .padbar{display:none;position:fixed;bottom:0;left:0;right:0;height:var(--pad-h);background:rgba(8,8,12,.97);border-top:1px solid var(--border);backdrop-filter:blur(20px);z-index:200;padding:9px 12px;padding-bottom:max(9px,env(safe-area-inset-bottom));}
-.padbar-top{display:flex;align-items:center;height:28px;margin-bottom:7px;}
+.padbar-top{display:flex;align-items:center;gap:6px;height:34px;margin-bottom:6px;}
 .rec-timer-bar{display:none;align-items:center;gap:6px;font-family:'Space Mono';font-size:11px;color:var(--c2);}
 .rec-timer-bar.on{display:flex;}
 .rec-timer-dot{width:6px;height:6px;border-radius:50%;background:var(--c2);animation:blink .8s ease-in-out infinite;}
@@ -193,6 +193,64 @@ input[type=range].yellow::-webkit-slider-thumb{background:var(--c3);box-shadow:0
 input[type=range].pink::-webkit-slider-thumb{background:var(--c2);box-shadow:0 0 10px var(--c2);}
 /* quantise mode indicator — kept for desktop */
 .d-quant-badge{display:none;}
+
+/* generic hide helper */
+.hidden{display:none!important;}
+
+/* loop (rehearse) button */
+.loop-btn{width:34px;height:34px;border-radius:50%;background:transparent;border:1px solid rgba(255,204,0,.3);color:var(--muted);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:.15s;}
+.loop-btn svg{width:15px;height:15px;}
+.loop-btn.active{border-color:var(--c3);color:var(--c3);background:rgba(255,204,0,.1);box-shadow:0 0 10px rgba(255,204,0,.18);}
+.loop-btn:active{transform:scale(.9);}
+
+/* BASE VIDEO (CH 00) */
+.base-card{background:var(--bg1);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.2s;}
+.base-card.loaded{border-color:rgba(0,255,204,.22);}
+.base-body{padding:11px;display:flex;flex-direction:column;gap:10px;}
+.base-drop{position:relative;display:flex;align-items:center;gap:11px;padding:10px 12px;background:var(--bg);border:1.5px dashed rgba(255,255,255,.1);border-radius:10px;cursor:pointer;transition:.2s;min-height:54px;}
+.base-drop:active{border-color:var(--c);background:rgba(0,255,204,.04);}
+.base-card.loaded .base-drop{border-style:solid;border-color:rgba(0,255,204,.16);}
+.base-ico{width:26px;height:26px;flex-shrink:0;color:var(--muted);opacity:.45;}
+.base-ico svg{width:100%;height:100%;}
+.base-card.loaded .base-ico{color:var(--c);opacity:.9;}
+.base-info{flex:1;min-width:0;}
+.base-name{font-family:'Space Mono';font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.base-meta{font-family:'Space Mono';font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.04em;}
+.base-card.loaded .base-meta{color:rgba(0,255,204,.6);}
+.base-clear{width:26px;height:26px;border-radius:50%;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:13px;line-height:1;display:none;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;}
+.base-card.loaded .base-clear{display:flex;}
+.base-clear:active{border-color:var(--c2);color:var(--c2);}
+.base-toggles{display:flex;gap:8px;flex-wrap:wrap;}
+.base-toggles .sync-btn{opacity:.35;pointer-events:none;}
+.base-card.loaded .base-toggles .sync-btn{opacity:1;pointer-events:auto;}
+.base-card.loaded .base-toggles .sync-btn.nobeat{opacity:.4;}
+
+/* export modal secondary row */
+.mrow{display:flex;gap:8px;margin-bottom:9px;}
+.mrow .mbtn{margin-bottom:0;padding:11px 4px;font-size:10px;}
+.mbtn.outline{background:transparent;border:1px solid rgba(255,255,255,.16);color:var(--text);}
+.mbtn.outline:active{border-color:var(--c);color:var(--c);}
+
+@media(max-width:400px){.rec-timer-bar{display:none!important;}.padbar-top .sync-btn,.padbar-top .rec-btn{padding:6px 9px;font-size:9px;letter-spacing:.06em;}}
+
+/* ══ ORGAN MODE ══ */
+.viz-row{display:flex;align-items:center;gap:7px;margin-top:7px;height:28px;}
+.viz-row .viz-bar{flex:1;min-width:0;width:auto;margin-top:0;height:28px;}
+.seg{display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden;height:28px;flex-shrink:0;}
+.seg button{padding:0 11px;font-family:'Space Mono';font-size:10px;letter-spacing:.06em;background:transparent;border:none;color:var(--muted);cursor:pointer;text-transform:uppercase;white-space:nowrap;}
+.seg button.on{background:var(--c);color:#000;font-weight:700;}
+body.organ-mode .seg button#mode-organ-m.on,body.organ-mode .seg button#mode-organ-d.on{background:var(--c3);}
+.auto-pill{display:none;padding:0 9px;height:28px;}
+body.organ-mode .auto-pill{display:flex;}
+.org-sel{background:var(--bg2);border:1px solid var(--border);color:var(--text);font-family:'Space Mono';font-size:12px;padding:6px 8px;border-radius:8px;}
+body.organ-mode .pad,body.organ-mode .d-pad{border-color:rgba(255,204,0,.22);}
+body.organ-mode .pad::before{background:radial-gradient(circle at 50% 110%,rgba(255,204,0,.14) 0%,transparent 65%);opacity:.7;}
+body.organ-mode .pad-num,body.organ-mode .d-pad-num{color:rgba(255,204,0,.65);}
+body.organ-mode .pad-lbl,body.organ-mode .d-pad-lbl{color:rgba(255,255,255,.55);}
+body.organ-mode .pad-dot,body.organ-mode .d-pad-dot{opacity:0!important;}
+body.organ-mode .pad.active,body.organ-mode .d-pad.active{border-color:var(--c3)!important;background:rgba(255,204,0,.09);box-shadow:0 0 16px rgba(255,204,0,.3);}
+body.organ-mode .pad.active .pad-num,body.organ-mode .d-pad.active .d-pad-num{color:var(--c3);}
+.pad.armed,.d-pad.armed{animation:blink .35s ease-in-out infinite;}
 
 /* ══ DESKTOP ══ */
 .desk{display:none;height:100vh;width:100vw;flex-direction:row;overflow:hidden;}
@@ -281,6 +339,7 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
         <div class="nosig-txt">NO SIGNAL</div>
       </div>
     </div>
+    <div id="base-slot-m"></div>
     <div class="card">
       <div class="card-hdr">
         <span class="card-lbl">Video Channels</span>
@@ -327,6 +386,7 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
         </div>
       </div>
     </div>
+    <div id="org-slot-m"></div>
     <div class="card">
       <div class="card-hdr"><span class="card-lbl">Howlround FX</span><span class="font-mono" style="font-size:9px;color:var(--muted)">VIDEO FEEDBACK</span></div>
       <div class="card-body" id="fx-panel-m"></div>
@@ -338,11 +398,12 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
 <!-- ══ PAD BAR ══ -->
 <div class="padbar" id="pad-bar">
   <div class="padbar-top">
+    <button class="play-btn" id="play-beat-bar" disabled></button>
+    <button class="loop-btn" id="loop-bar" title="Loop (rehearse a pass)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 013-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 01-3 3H3"/></svg></button>
     <div class="rec-timer-bar" id="rec-timer-bar"><div class="rec-timer-dot"></div><span id="timer-bar" class="font-mono">00:00</span></div>
-    <button class="play-btn" id="play-beat-bar" disabled style="flex-shrink:0;"></button>
-    <button class="sync-btn" id="sync-btn-m" onclick="syncToggle()" style="margin-left:6px;"><div class="sync-btn-dot"></div><span>Beat Sync</span></button>
-    <button class="sync-btn fx-btn" id="fx-btn-m" onclick="fxToggle()" style="margin-left:6px;"><div class="sync-btn-dot"></div><span>FX</span></button>
-    <button class="rec-btn" id="btn-rec-m" style="margin-left:8px;"><div class="rec-btn-dot"></div><span>Record</span></button>
+    <button class="sync-btn" id="sync-btn-m" onclick="syncToggle()" style="margin-left:auto;"><div class="sync-btn-dot"></div><span>Beat Sync</span></button>
+    <button class="sync-btn fx-btn" id="fx-btn-m" onclick="fxToggle()"><div class="sync-btn-dot"></div><span>FX</span></button>
+    <button class="rec-btn" id="btn-rec-m" style="margin-left:0;"><div class="rec-btn-dot"></div><span>Record</span></button>
   </div>
   <div class="pad-grid">
     <div class="pad" data-ch="1"><div class="pad-dot"></div><div class="pad-num">1</div><div class="pad-lbl">—</div></div>
@@ -350,7 +411,11 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
     <div class="pad" data-ch="3"><div class="pad-dot"></div><div class="pad-num">3</div><div class="pad-lbl">—</div></div>
     <div class="pad" data-ch="4"><div class="pad-dot"></div><div class="pad-num">4</div><div class="pad-lbl">—</div></div>
   </div>
-  <canvas id="viz-bar" class="viz-bar" width="600" height="28"></canvas>
+  <div class="viz-row">
+    <div class="seg"><button id="mode-clips-m" class="on" onclick="setMode(false)">Clips</button><button id="mode-organ-m" onclick="setMode(true)">Organ</button></div>
+    <button class="sync-btn auto-pill" id="auto-btn-m" onclick="orgAuto()"><div class="sync-btn-dot"></div><span>Auto</span></button>
+    <canvas id="viz-bar" class="viz-bar" width="600" height="28"></canvas>
+  </div>
 </div>
 
 <!-- ══ DESKTOP ══ -->
@@ -388,6 +453,8 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
           <div class="arow"><span class="albl">VOL</span><input type="range" id="vol-beat-d" min="0" max="1" step="0.05" value="0.7" style="flex:1;"></div>
         </div>
       </div>
+      <div id="base-slot-d"></div>
+      <div id="org-slot-d"></div>
       <div class="d-sec">
         <div class="d-sec-hdr"><span class="d-sec-lbl">Howlround FX</span></div>
         <div class="d-sec-body" id="fx-panel-d"></div>
@@ -407,6 +474,10 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
         <div class="d-pad" data-ch="4"><div class="d-pad-dot"></div><div class="d-pad-num">4</div><div class="d-pad-lbl">no clip</div></div>
       </div>
       <div class="d-rec-area">
+        <div class="seg"><button id="mode-clips-d" class="on" onclick="setMode(false)">Clips</button><button id="mode-organ-d" onclick="setMode(true)">Organ</button></div>
+        <button class="sync-btn" id="auto-btn-d" onclick="orgAuto()"><div class="sync-btn-dot"></div><span>Auto</span></button>
+        <button class="play-btn" id="play-beat-d" disabled></button>
+        <button class="loop-btn" id="loop-d" title="Loop (rehearse a pass)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a3 3 0 013-3h15"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a3 3 0 01-3 3H3"/></svg></button>
         <button class="sync-btn" id="sync-btn-d" onclick="syncToggle()"><div class="sync-btn-dot"></div><span>Beat Sync</span></button>
         <button class="sync-btn fx-btn" id="fx-btn-d" onclick="fxToggle()"><div class="sync-btn-dot"></div><span>FX</span></button>
         <span class="d-rec-timer font-mono" id="timer-d">00:00</span>
@@ -428,15 +499,16 @@ input[type=file]{position:absolute;opacity:0;width:1px;height:1px;}
   <div class="modal-card">
     <div style="width:36px;height:3px;background:linear-gradient(90deg,var(--c),var(--c3));border-radius:2px;margin:0 auto 18px;"></div>
     <h2>SAVED</h2>
-    <p>Your performance is ready</p>
+    <p id="take-no">Your performance is ready</p>
     <button class="mbtn primary" id="btn-watch">▶ Watch Now</button>
     <button class="mbtn secondary" id="btn-download">↓ Download</button>
+    <div class="mrow"><button class="mbtn outline" id="btn-layer">＋ Add layer</button><button class="mbtn outline" id="btn-redo">↺ Redo pass</button></div>
     <button class="mbtn ghost" id="btn-close">Dismiss</button>
   </div>
 </div>
 
 <div style="display:none;">
-  <video id="src-1" playsinline></video><video id="src-2" playsinline></video>
+  <video id="src-0" playsinline></video><video id="src-1" playsinline></video><video id="src-2" playsinline></video>
   <video id="src-3" playsinline></video><video id="src-4" playsinline></video>
 </div>
 
@@ -763,9 +835,7 @@ function syncFxUI() {
   ['fx-btn-m','fx-btn-d'].forEach(id => { const el=$(id); if(el) el.classList.toggle('active', FX.on); });
   updateNoSig();
 }
-function updateNoSig() {
-  ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity = (S.active || FX.on) ? '0' : '1'; });
-}
+function updateNoSig() { updateNoSignal(); }
 window.fxToggle = function(force) {
   const want = typeof force === 'boolean' ? force : !FX.on;
   if (want && !ensureHR()) { showToast('FX needs WebGL — not available here','error'); return; }
@@ -797,7 +867,16 @@ const S = {
   beatGain: null,
   beatAn: null,
   beatData: null,
-  playing: false,
+  playing: false,      // backing (base video + audio track) is playing
+  loop: false,         // rehearse loop
+  lastTake: null,
+  takeNo: 0,
+  org: {mode:false, set:0, key:0, minor:false, preset:'jazz', leslie:true, vol:.6, auto:false, follow:true,
+        pending:{}, padVoice:{}, autoVoice:null, autoId:-2, vlManual:{avg:null}, vlAuto:{avg:null},
+        out:null, bus:null},
+  gAn: null, gData: null,
+  base: {loaded:false, loading:false, analysing:false, video:null, gain:null, url:null,
+         muted:false, sync:true, interval:null, phase:0, bpm:null, name:'', dur:0, harm:null},
   timerIv: null,
 
   // Metronome (click track only — never routed to recording)
@@ -807,6 +886,7 @@ const S = {
   det: {
     detectedBpm: null,
     detectedInterval: null,
+    detectedPhase: 0,
     nextBeatActx: 0,
     clockSeeded: false,
     clockSource: 'none',
@@ -851,7 +931,14 @@ function buildUI() {
 
 // ── AUDIO CONTEXT ─────────────────────────────────────────────────────────────
 function ensureActx() {
-  if (!S.actx) S.actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (!S.actx) {
+    S.actx = new (window.AudioContext || window.webkitAudioContext)();
+    // shared analyser for the visualiser (base + audio track feed it)
+    S.gAn = S.actx.createAnalyser(); S.gAn.fftSize = 64;
+    S.gData = new Uint8Array(S.gAn.frequencyBinCount);
+    const sil = S.actx.createGain(); sil.gain.value = 0;
+    S.gAn.connect(sil); sil.connect(S.actx.destination);
+  }
   if (S.actx.state === 'suspended') S.actx.resume();
 }
 document.body.addEventListener('touchstart', ensureActx, {once:true, passive:true});
@@ -861,10 +948,11 @@ document.body.addEventListener('click', ensureActx, {once:true});
 function onBeat() {
   if (FX.on && FX.beat && HR) HR.kick(FX.beatAmt);
   if (!S.quantise) return;
+  organBeat();
 
   // Flash loaded/active pads
   document.querySelectorAll('[data-ch]').forEach(el => {
-    if (el.classList.contains('loaded') || el.classList.contains('active')) {
+    if (el.classList.contains('loaded') || el.classList.contains('active') || el.classList.contains('organ-pad')) {
       el.classList.add('beat-flash');
       setTimeout(() => el.classList.remove('beat-flash'), 120);
     }
@@ -897,7 +985,7 @@ function fireClip(ch) {
     vid.muted = false;
     vid.play().catch(() => {});
     S.active = ch;
-    ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity='0'; });
+    updateNoSignal();
   }
 }
 
@@ -906,18 +994,502 @@ function fireClip(ch) {
 // then run a precise AudioContext-scheduled clock during playback.
 // This is far more reliable than real-time energy detection.
 
-async function analyseAudioForBPM(arrayBuffer) {
-  const offlineCtx = new OfflineAudioContext(1, 1, 44100);
-  let decoded;
-  try {
-    decoded = await offlineCtx.decodeAudioData(arrayBuffer);
-  } catch(e) { return null; }
+// ══ MUSIC ANALYSIS: key + chords (all in the browser, no libraries) ═══════════════
+const KEYS = ['C','C♯','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+const chordName = (root, q) => KEYS[root % 12] + (q==='min' ? 'm' : q==='dim' ? '°' : q==='7' ? '7' : '');
+const MAJ_PROF = [6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88];
+const MIN_PROF = [6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17];
+// chord ids: 0–11 = major on root, 12–23 = minor on (id-12)
+const TPL = (() => {
+  const t = [];
+  for (let q = 0; q < 2; q++) for (let r = 0; r < 12; r++) {
+    const v = new Float32Array(12);
+    [0, q ? 3 : 4, 7].forEach(i => v[(r+i)%12] = 1/Math.sqrt(3));
+    t.push(v);
+  }
+  return t;
+})();
 
+function pearson(a, b) {
+  const n = a.length; let ma = 0, mb = 0;
+  for (let i = 0; i < n; i++) { ma += a[i]; mb += b[i]; }
+  ma /= n; mb /= n;
+  let num = 0, da = 0, db = 0;
+  for (let i = 0; i < n; i++) { const x = a[i]-ma, y = b[i]-mb; num += x*y; da += x*x; db += y*y; }
+  return num / (Math.sqrt(da*db) || 1);
+}
+
+function estimateKey(g) {
+  let best = -2, bk = 0, bm = false;
+  for (let m = 0; m < 2; m++) for (let k = 0; k < 12; k++) {
+    const prof = m ? MIN_PROF : MAJ_PROF, rot = new Array(12);
+    for (let i = 0; i < 12; i++) rot[i] = prof[(i - k + 12) % 12];
+    const r = pearson(g, rot);
+    if (r > best) { best = r; bk = k; bm = !!m; }
+  }
+  return {key:bk, minor:bm, r:best};
+}
+
+// chords that belong to a key: [semitones above tonic, isMinor]
+function diatonicIds(key, minor) {
+  const L = minor ? [[0,1],[3,0],[5,1],[7,1],[7,0],[8,0],[10,0]]
+                  : [[0,0],[2,1],[4,1],[5,0],[7,0],[9,1]];
+  return L.map(([o, m]) => ((key + o) % 12) + (m ? 12 : 0));
+}
+
+function makeFFT(N) {
+  const rev = new Uint32Array(N), cs = new Float32Array(N/2), sn = new Float32Array(N/2);
+  const bits = Math.log2(N);
+  for (let i = 0; i < N; i++) { let r = 0; for (let b = 0; b < bits; b++) if (i & (1<<b)) r |= 1 << (bits-1-b); rev[i] = r; }
+  for (let i = 0; i < N/2; i++) { cs[i] = Math.cos(2*Math.PI*i/N); sn[i] = -Math.sin(2*Math.PI*i/N); }
+  return (re, im) => {
+    for (let i = 0; i < N; i++) { const j = rev[i]; if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+    for (let size = 2; size <= N; size <<= 1) {
+      const half = size >> 1, step = N / size;
+      for (let i = 0; i < N; i += size) {
+        for (let j = 0, k = 0; j < half; j++, k += step) {
+          const a = i + j, b = a + half;
+          const tr = re[b]*cs[k] - im[b]*sn[k], ti = re[b]*sn[k] + im[b]*cs[k];
+          re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+        }
+      }
+    }
+  };
+}
+
+// Turn the audio into one "which notes are sounding" fingerprint per beat, and find the key.
+async function harmonyFromDecoded(decoded, tempo) {
+  const sr0 = decoded.sampleRate, nch = decoded.numberOfChannels, len = decoded.length;
+  const dec = Math.max(1, Math.round(sr0 / 11025)), sr = sr0 / dec, m = Math.floor(len / dec);
+  if (m < 4096 * 4) return null;
+  const chans = []; for (let c = 0; c < nch; c++) chans.push(decoded.getChannelData(c));
+  const mono = new Float32Array(m);
+  for (let i = 0; i < m; i++) {
+    let s = 0; const b = i * dec;
+    for (let c = 0; c < nch; c++) { const d = chans[c]; for (let j = 0; j < dec; j++) s += d[b+j]; }
+    mono[i] = s / (dec * nch);
+  }
+  const N = 4096, hop = 2048, fft = makeFFT(N);
+  const win = new Float32Array(N); for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5*Math.cos(2*Math.PI*i/(N-1));
+  const kmin = Math.ceil(65*N/sr), kmax = Math.min(N/2 - 1, Math.floor(2000*N/sr));
+  const pcOf = new Int8Array(N/2).fill(-1);
+  for (let k = kmin; k <= kmax; k++) {
+    const f = k*sr/N, midi = 69 + 12*Math.log2(f/440), r = Math.round(midi);
+    if (Math.abs(midi - r) < 0.4) pcOf[k] = ((r % 12) + 12) % 12;
+  }
+  const nF = Math.floor((m - N) / hop) + 1;
+  const frames = new Float32Array(nF*12), en = new Float32Array(nF), tc = new Float32Array(nF);
+  const re = new Float32Array(N), im = new Float32Array(N);
+  for (let f = 0; f < nF; f++) {
+    const s = f * hop;
+    for (let i = 0; i < N; i++) { re[i] = mono[s+i] * win[i]; im[i] = 0; }
+    fft(re, im);
+    let e = 0;
+    for (let k = kmin; k <= kmax; k++) {
+      const p = pcOf[k]; if (p < 0) continue;
+      const a = Math.sqrt(Math.sqrt(re[k]*re[k] + im[k]*im[k]));
+      frames[f*12 + p] += a; e += a;
+    }
+    en[f] = e; tc[f] = (s + N/2) / sr;
+    if (f % 150 === 149) await new Promise(r => setTimeout(r));   // keep the page responsive
+  }
+
+  // group frames into beat-sized slices
+  let L = tempo ? tempo.interval : 0.5; if (L < 0.4) L *= 2;
+  const t0 = tempo ? (tempo.phase % L) : 0;
+  const dur = m / sr, nS = Math.max(1, Math.floor((dur - t0) / L));
+  const acc = Array.from({length:nS}, () => new Float32Array(12));
+  const eacc = new Float32Array(nS), cnt = new Int32Array(nS);
+  for (let f = 0; f < nF; f++) {
+    const i = Math.floor((tc[f] - t0) / L); if (i < 0 || i >= nS) continue;
+    for (let p = 0; p < 12; p++) acc[i][p] += frames[f*12+p];
+    eacc[i] += en[f]; cnt[i]++;
+  }
+  const g = new Array(12).fill(0), mean = new Float32Array(nS); let emax = 0;
+  for (let i = 0; i < nS; i++) {
+    mean[i] = cnt[i] ? eacc[i]/cnt[i] : 0; if (mean[i] > emax) emax = mean[i];
+    for (let p = 0; p < 12; p++) g[p] += acc[i][p];
+  }
+  const chroma = [], quiet = [];
+  for (let i = 0; i < nS; i++) {
+    const v = acc[i]; let n = 0; for (let p = 0; p < 12; p++) n += v[p]*v[p];
+    n = Math.sqrt(n) || 1;
+    const u = new Float32Array(12); for (let p = 0; p < 12; p++) u[p] = v[p] / n;
+    chroma.push(u); quiet.push(!cnt[i] || mean[i] < 0.12 * emax);
+  }
+  const ks = estimateKey(g);
+  return {L, t0, chroma, quiet, key:ks.key, minor:ks.minor, r:ks.r,
+          conf: ks.r >= .75 ? 'clear match' : ks.r >= .6 ? 'fair match' : 'unsure', segs:null};
+}
+
+// Pick the most likely chord for each slice (Viterbi with a "stay on the same chord" bias)
+function fitChords(h, key, minor, follow) {
+  const n = h.chroma.length, dia = new Set(diatonicIds(key, minor));
+  const P = follow ? 0.10 : 0.16;
+  let prev = new Float32Array(24); const back = [];
+  for (let i = 0; i < n; i++) {
+    const c = h.chroma[i], cur = new Float32Array(24), bp = new Uint8Array(24);
+    let gm = -1e9, ga = 0;
+    for (let s = 0; s < 24; s++) if (prev[s] > gm) { gm = prev[s]; ga = s; }
+    for (let s = 0; s < 24; s++) {
+      let e = 0;
+      if (!h.quiet[i]) {
+        if (!follow && !dia.has(s)) e = -9;
+        else { let d = 0; const T = TPL[s]; for (let p = 0; p < 12; p++) d += c[p]*T[p]; e = d + (dia.has(s) ? 0.05 : 0); }
+      }
+      if (prev[s] >= gm - P) { cur[s] = prev[s] + e; bp[s] = s; } else { cur[s] = gm - P + e; bp[s] = ga; }
+    }
+    back.push(bp); prev = cur;
+  }
+  let s = 0, gm = -1e9; for (let k = 0; k < 24; k++) if (prev[k] > gm) { gm = prev[k]; s = k; }
+  const ids = new Array(n);
+  for (let i = n - 1; i >= 0; i--) { ids[i] = s; s = back[i][s]; }
+  const segs = [];
+  for (let i = 0; i < n; i++) {
+    const id = h.quiet[i] ? -1 : ids[i], a = h.t0 + i*h.L, b = a + h.L, last = segs[segs.length-1];
+    if (last && last.id === id) last.t1 = b; else segs.push({t0:a, t1:b, id});
+  }
+  h.segs = segs;
+}
+
+// Decode once, then run tempo + harmony analysis on the same audio
+async function analyseMedia(arrayBuffer) {
+  const ctx = new OfflineAudioContext(1, 1, 44100);
+  let decoded;
+  try { decoded = await ctx.decodeAudioData(arrayBuffer); } catch(e) { return {tempo:null, harmony:null}; }
+  let tempo = null, harmony = null;
+  try { tempo = tempoFromDecoded(decoded); } catch(e) {}
+  try { harmony = await harmonyFromDecoded(decoded, tempo); } catch(e) { console.warn('harmony', e); }
+  return {tempo, harmony};
+}
+
+// ══ HAMMOND ORGAN (synthesised with Web Audio — no samples, no cost) ═════════════
+// drawbars: 16' 5⅓' 8' 4' 2⅔' 2' 1⅗' 1⅓' 1'
+const DRAWBARS = {
+  jazz:   [8,8,8,0,0,0,0,0,0],
+  gospel: [8,8,8,8,0,8,0,0,0],
+  rock:   [8,6,8,8,0,0,0,0,6],
+  soft:   [0,0,8,4,0,0,0,0,0],
+};
+const DB_RATIO = [0.5, 1.5, 1, 2, 3, 4, 5, 6, 8];
+
+function ensureOrgan() {
+  ensureActx();
+  const O = S.org; if (O.out) return;
+  const a = S.actx;
+  O.bus = a.createGain(); O.bus.gain.value = O.vol * 0.8;
+  O.trem = a.createGain(); O.trem.gain.value = 1;
+  O.lfo = a.createOscillator(); O.lfo.frequency.value = 5.6;
+  O.tremDepth = a.createGain(); O.tremDepth.gain.value = 0;
+  O.lfo.connect(O.tremDepth); O.tremDepth.connect(O.trem.gain);
+  O.del = a.createDelay(0.05); O.del.delayTime.value = 0.006;
+  O.vibDepth = a.createGain(); O.vibDepth.gain.value = 0;
+  O.lfo.connect(O.vibDepth); O.vibDepth.connect(O.del.delayTime);
+  O.wet = a.createGain(); O.wet.gain.value = 0;
+  O.out = a.createGain(); O.out.gain.value = 1;
+  O.bus.connect(O.trem); O.trem.connect(O.out);
+  O.trem.connect(O.del); O.del.connect(O.wet); O.wet.connect(O.out);
+  O.lfo.start();
+  O.out.connect(a.destination); O.out.connect(S.gAn);
+  // tiny noise burst for the key click
+  const nb = a.createBuffer(1, Math.floor(a.sampleRate * 0.02), a.sampleRate), d = nb.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2 - 1) * (1 - i/d.length);
+  O.click = nb;
+  applyLeslie();
+}
+
+function applyLeslie() {
+  const O = S.org; if (!O.out) return;
+  const on = O.leslie;
+  O.trem.gain.value = on ? 0.82 : 1;
+  O.tremDepth.gain.value = on ? 0.18 : 0;
+  O.vibDepth.gain.value = on ? 0.0016 : 0;
+  O.wet.gain.value = on ? 0.5 : 0;
+}
+
+// midis = array of MIDI notes; returns {stop()}
+function organVoice(midis) {
+  ensureOrgan();
+  const a = S.actx, O = S.org, t = a.currentTime;
+  const env = a.createGain();
+  env.gain.setValueAtTime(0, t); env.gain.linearRampToValueAtTime(1, t + 0.012);
+  env.connect(O.bus);
+  const bars = DRAWBARS[O.preset] || DRAWBARS.jazz, tot = bars.reduce((s, v) => s + v, 0) || 1;
+  const oscs = [], noteGain = 0.9 / midis.length;
+  midis.forEach(mn => {
+    const f = 440 * Math.pow(2, (mn - 69) / 12);
+    const ng = a.createGain(); ng.gain.value = noteGain; ng.connect(env);
+    bars.forEach((lv, i) => {
+      if (!lv) return;
+      const fr = f * DB_RATIO[i]; if (fr > 10000) return;
+      const o = a.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+      const g = a.createGain(); g.gain.value = lv / tot;
+      o.connect(g); g.connect(ng); o.start(t); oscs.push(o);
+    });
+  });
+  const cs = a.createBufferSource(); cs.buffer = O.click;
+  const bp = a.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 3000;
+  const cg = a.createGain(); cg.gain.value = 0.06;
+  cs.connect(bp); bp.connect(cg); cg.connect(O.bus); cs.start(t);
+  let stopped = false;
+  return {
+    stop() {
+      if (stopped) return; stopped = true;
+      const t0 = a.currentTime;
+      env.gain.cancelScheduledValues(t0);
+      env.gain.setTargetAtTime(0, t0, 0.05);
+      oscs.forEach(o => { try { o.stop(t0 + 0.5); } catch(_) {} });
+      setTimeout(() => { try { env.disconnect(); } catch(_) {} }, 700);
+    }
+  };
+}
+
+// bass note + a right-hand triad, voiced close to the previous chord
+function chordMidis(root, q, vl) {
+  const iv = q === 'min' ? [0,3,7] : q === 'dim' ? [0,3,6] : q === '7' ? [0,4,7,10] : [0,4,7];
+  const base = 60 + root - (root > 6 ? 12 : 0);
+  const target = vl.avg == null ? 64 : vl.avg;
+  let best = null, bd = 1e9;
+  for (let inv = 0; inv < iv.length; inv++) {
+    const notes = iv.map((x, i) => base + x + (i < inv ? 12 : 0)).sort((x, y) => x - y);
+    for (const sh of [-12, 0, 12]) {
+      const n = notes.map(x => x + sh);
+      if (n[0] < 52 || n[n.length-1] > 81) continue;
+      const avg = n.reduce((s, x) => s + x, 0) / n.length, d = Math.abs(avg - target);
+      if (d < bd) { bd = d; best = n; }
+    }
+  }
+  if (!best) best = iv.map(x => base + x);
+  vl.avg = best.reduce((s, x) => s + x, 0) / best.length;
+  return [36 + root, ...best];
+}
+const organChord = (root, q, vl) => organVoice(chordMidis(root, q, vl));
+
+// ── chord pads ────────────────────────────────────────────────────────────────
+function padChords() {
+  const {key, minor, set} = S.org;
+  const A = minor ? [[0,'min','i'],[5,'min','iv'],[7,'maj','V'],[8,'maj','VI']]
+                  : [[0,'maj','I'],[5,'maj','IV'],[7,'maj','V'],[9,'min','vi']];
+  const B = minor ? [[3,'maj','III'],[10,'maj','VII'],[2,'dim','ii°'],[7,'7','V7']]
+                  : [[2,'min','ii'],[4,'min','iii'],[10,'maj','♭VII'],[7,'7','V7']];
+  return (set ? B : A).map(([o, q, num]) => { const root = (key + o) % 12; return {root, q, num, name: chordName(root, q)}; });
+}
+
+function padEls(ch) { return document.querySelectorAll(`[data-ch="${ch}"]`); }
+
+function organPress(ch) {
+  const O = S.org; if (!padChords()[ch-1]) return;
+  organRelease(ch);
+  padEls(ch).forEach(el => el.classList.add('active'));
+  if (S.quantise && S.det.clockSource !== 'none') {         // wait for the next beat
+    O.pending[ch] = true;
+    padEls(ch).forEach(el => el.classList.add('armed'));
+  } else startPadVoice(ch);
+}
+function startPadVoice(ch) {
+  const pc = padChords()[ch-1]; if (!pc) return;
+  S.org.padVoice[ch] = organChord(pc.root, pc.q, S.org.vlManual);
+}
+function organRelease(ch) {
+  const O = S.org;
+  padEls(ch).forEach(el => el.classList.remove('active', 'glow-active', 'armed'));
+  delete O.pending[ch];
+  if (O.padVoice[ch]) { O.padVoice[ch].stop(); delete O.padVoice[ch]; }
+}
+function organReleaseAll() { [1,2,3,4].forEach(organRelease); }
+function organBeat() {
+  const O = S.org;
+  Object.keys(O.pending).forEach(ch => {
+    delete O.pending[ch];
+    padEls(ch).forEach(el => el.classList.remove('armed'));
+    startPadVoice(+ch);
+  });
+}
+function organFlushPending() { organBeat(); }
+
+// ── auto-accompany: follow the chords found in the base video / audio track ──
+function harmSrcRaw() {
+  if (S.base.loaded) return S.base.harm ? {el:S.base.video, harm:S.base.harm} : null;
+  if (S.beatEl && S.det.harm) return {el:S.beatEl, harm:S.det.harm};
+  return null;
+}
+function harmSrc() { const h = harmSrcRaw(); return h && h.harm.segs ? h : null; }
+
+function organAutoStop() {
+  const O = S.org;
+  if (O.autoVoice) { O.autoVoice.stop(); O.autoVoice = null; }
+  O.autoId = -2;
+}
+function organAuto() {
+  const O = S.org;
+  const h = O.auto && S.playing ? harmSrc() : null;
+  if (!h) { if (O.autoId !== -2) organAutoStop(); return; }
+  const t = h.el.currentTime + 0.02, segs = h.harm.segs;
+  let lo = 0, hi = segs.length - 1, id = -1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (t < segs[mid].t0) hi = mid - 1; else if (t >= segs[mid].t1) lo = mid + 1; else { id = segs[mid].id; break; }
+  }
+  if (id === O.autoId) return;
+  if (O.autoVoice) { O.autoVoice.stop(); O.autoVoice = null; }
+  O.autoId = id;
+  if (id >= 0) O.autoVoice = organChord(id % 12, id >= 12 ? 'min' : 'maj', O.vlAuto);
+}
+
+function refitHarmony() {
+  const O = S.org;
+  [S.base.harm, S.det.harm].forEach(h => { if (h) fitChords(h, O.key, O.minor, O.follow); });
+}
+// called whenever an analysis finishes: take the key it found, re-fit chords, refresh the UI
+function onHarmony() {
+  const O = S.org, h = harmSrcRaw();
+  if (h) { O.key = h.harm.key; O.minor = h.harm.minor; }
+  refitHarmony(); updateOrganUI(); refreshPads();
+}
+
+// ── mode, pads, controls ─────────────────────────────────────────────────────
+function setMode(on) {
+  const O = S.org;
+  if (on && O.mode) { O.set ^= 1; refreshPads(); updateOrganUI(); return; }   // tap Organ again = other chord set
+  if (on === O.mode) return;
+  if (S.active) triggerRelease(S.active);
+  if (on) ensureOrgan(); else organReleaseAll();
+  O.mode = on; refreshPads(); updateOrganUI();
+}
+function refreshPads() {
+  const O = S.org, pcs = O.mode ? padChords() : null;
+  document.querySelectorAll('[data-ch]').forEach(el => {
+    const ch = +el.dataset.ch, isD = el.classList.contains('d-pad');
+    const num = el.querySelector('.pad-num,.d-pad-num'), lbl = el.querySelector('.pad-lbl,.d-pad-lbl');
+    if (!num || !lbl) return;
+    if (O.mode) { num.textContent = pcs[ch-1].num; lbl.textContent = pcs[ch-1].name; el.classList.add('organ-pad'); }
+    else { el.classList.remove('organ-pad', 'armed'); num.textContent = ch; lbl.textContent = S.ch[ch].loaded ? S.ch[ch].name : (isD ? 'no clip' : '—'); }
+  });
+}
+function orgKey(v)    { S.org.key = +v; refitHarmony(); updateOrganUI(); refreshPads(); }
+function orgMinor(m)  { S.org.minor = m; refitHarmony(); updateOrganUI(); refreshPads(); }
+function orgPreset(n) { S.org.preset = n; updateOrganUI(); }
+function orgLeslie()  { S.org.leslie = !S.org.leslie; applyLeslie(); updateOrganUI(); }
+function orgVol(v)    { S.org.vol = +v; if (S.org.bus) S.org.bus.gain.value = S.org.vol * 0.8; updateOrganUI(); }
+function orgFollow(b) { S.org.follow = b; refitHarmony(); updateOrganUI(); }
+function orgSet(n)    { S.org.set = n; refreshPads(); updateOrganUI(); }
+function orgAuto() {
+  const O = S.org; O.auto = !O.auto;
+  if (!O.auto) organAutoStop();
+  else if (!harmSrcRaw() && !S.base.loading && !S.det.harmBusy) showToast('Load a base video or audio track first', 'error');
+  updateOrganUI();
+}
+
+function orgStatus() {
+  const O = S.org, b = S.base;
+  const report = h => `${KEYS[h.key]} ${h.minor ? 'minor' : 'major'} · ${h.conf} · ${h.segs ? h.segs.filter(x => x.id >= 0).length : 0} chords heard`
+                      + ((O.key === h.key && O.minor === h.minor) ? '' : ' · key changed by you');
+  if (b.loaded) {
+    if (b.harm) return report(b.harm);
+    return b.analysing ? 'Listening to the base video…' : 'Could not read this video’s audio — set the key by hand.';
+  }
+  if (S.beatEl) {
+    if (S.det.harm) return report(S.det.harm);
+    return S.det.harmBusy ? 'Listening to the audio track…' : 'Could not read this audio — set the key by hand.';
+  }
+  return 'Load a base video or audio track to find its key and chords.';
+}
+
+function buildOrgan() {
+  const keyOpts = KEYS.map((k, i) => `<option value="${i}">${k}</option>`).join('');
+  const presets = ['jazz','gospel','rock','soft'].map(n => `<button id="org-pre-%P-${n}" onclick="orgPreset('${n}')">${n}</button>`).join('');
+  const inner = p => `
+    <div class="card-hdr"><span class="card-lbl">Hammond Organ</span><span class="font-mono" style="font-size:9px;color:var(--muted)">SYNTH · FREE</span></div>
+    <div class="card-body">
+      <div class="arow"><span class="albl" style="width:34px">KEY</span>
+        <select id="org-key-${p}" class="org-sel" onchange="orgKey(this.value)">${keyOpts}</select>
+        <div class="mtoggle" style="flex:1"><button id="org-maj-${p}" onclick="orgMinor(false)">MAJOR</button><button id="org-min-${p}" onclick="orgMinor(true)">MINOR</button></div>
+      </div>
+      <div class="arow"><span class="albl" style="width:34px">PADS</span>
+        <div class="mtoggle" style="flex:1"><button id="org-sa-${p}" onclick="orgSet(0)">SET A</button><button id="org-sb-${p}" onclick="orgSet(1)">SET B</button></div>
+      </div>
+      <div class="mtoggle">${presets.replace(/%P/g, p)}</div>
+      <div class="arow">
+        <button class="sync-btn" id="org-leslie-${p}" onclick="orgLeslie()"><div class="sync-btn-dot"></div><span>Leslie</span></button>
+        <input type="range" id="org-vol-${p}" min="0" max="1" step="0.05" value="0.6" style="flex:1;" oninput="orgVol(this.value)">
+      </div>
+      <hr class="divider">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+        <div><span style="font-size:12px;font-weight:500;">Auto-accompany</span>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px;">Organ plays along with your video</div></div>
+        <button class="sync-btn" id="org-auto-${p}" onclick="orgAuto()"><div class="sync-btn-dot"></div><span>Off</span></button>
+      </div>
+      <div class="mtoggle"><button id="org-fol-${p}" onclick="orgFollow(true)">Follow chords</button><button id="org-stay-${p}" onclick="orgFollow(false)">Stay in key</button></div>
+      <canvas id="chord-${p}" class="viz" width="600" height="44" style="height:44px;"></canvas>
+      <div class="bpm-detected" id="org-status-${p}" style="line-height:1.5;"></div>
+    </div>`;
+  ['m','d'].forEach(p => { const el = $(`org-slot-${p}`); if (el) el.innerHTML = `<div class="base-card" id="org-card-${p}">${inner(p)}</div>`; });
+}
+
+function updateOrganUI() {
+  const O = S.org;
+  document.body.classList.toggle('organ-mode', O.mode);
+  const st = orgStatus();
+  ['m','d'].forEach(p => {
+    const tg = (id, on) => { const el = $(id); if (el) el.classList.toggle('on', on); };
+    const ac = (id, on) => { const el = $(id); if (el) el.classList.toggle('active', on); };
+    tg(`mode-clips-${p}`, !O.mode); tg(`mode-organ-${p}`, O.mode);
+    const ob = $(`mode-organ-${p}`); if (ob) ob.textContent = (O.mode && O.set) ? 'Organ B' : 'Organ';
+    ac(`auto-btn-${p}`, O.auto);
+    const key = $(`org-key-${p}`); if (key) key.value = O.key;
+    tg(`org-maj-${p}`, !O.minor); tg(`org-min-${p}`, O.minor);
+    tg(`org-sa-${p}`, !O.set); tg(`org-sb-${p}`, !!O.set);
+    Object.keys(DRAWBARS).forEach(n => tg(`org-pre-${p}-${n}`, O.preset === n));
+    ac(`org-leslie-${p}`, O.leslie);
+    const v = $(`org-vol-${p}`); if (v) v.value = O.vol;
+    ac(`org-auto-${p}`, O.auto);
+    const as = $(`org-auto-${p}`); if (as) as.querySelector('span').textContent = O.auto ? 'On' : 'Off';
+    tg(`org-fol-${p}`, O.follow); tg(`org-stay-${p}`, !O.follow);
+    const s = $(`org-status-${p}`); if (s) s.textContent = st;
+  });
+}
+
+// ── chord strip (the card + the pad bar in Organ mode) ───────────────────────
+function fitCanvas(c) {
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = Math.round(c.clientWidth * dpr), h = Math.round(c.clientHeight * dpr);
+  if (!w || !h) return false;
+  if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+  return true;
+}
+function drawChords(cvs, placeholder) {
+  const h = harmSrc(), ctx = cvs.getContext('2d'), W = cvs.width, H = cvs.height;
+  if (!h || !h.harm.segs.length) {
+    if (!placeholder) return false;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.font = `${Math.round(H*.3)}px 'Space Mono',monospace`; ctx.textBaseline = 'middle';
+    ctx.fillText('chords appear here', 8, H/2);
+    return true;
+  }
+  ctx.clearRect(0, 0, W, H);
+  const t = h.el.currentTime, win = placeholder ? 12 : 5, t0 = S.playing ? Math.max(0, t - win*.2) : 0;
+  const X = s => (s - t0) / win * W;
+  ctx.font = `bold ${Math.round(H*.4)}px 'Space Mono',monospace`; ctx.textBaseline = 'middle';
+  for (const s of h.harm.segs) {
+    if (s.id < 0 || s.t1 < t0 || s.t0 > t0 + win) continue;
+    const x0 = Math.max(0, X(s.t0)), x1 = Math.min(W, X(s.t1)), w = x1 - x0; if (w < 1) continue;
+    const cur = S.playing && t >= s.t0 && t < s.t1, minor = s.id >= 12;
+    ctx.fillStyle = minor ? `rgba(255,45,85,${cur ? .55 : .22})` : `rgba(0,255,204,${cur ? .5 : .18})`;
+    ctx.fillRect(x0 + 1, 2, Math.max(0, w - 2), H - 4);
+    if (w > H * 1.2) { ctx.fillStyle = cur ? '#fff' : 'rgba(232,232,240,.75)'; ctx.fillText(chordName(s.id % 12, minor ? 'min' : 'maj'), x0 + 6, H/2); }
+  }
+  if (S.playing) { ctx.fillStyle = '#ffcc00'; ctx.fillRect(Math.round(X(t)) - 1, 0, 2, H); }
+  return true;
+}
+
+// ══ TEMPO ANALYSIS (from decoded audio) ═══════════════════════════════════════
+function tempoFromDecoded(decoded) {
   const data = decoded.getChannelData(0);
   const sr   = decoded.sampleRate;
 
   // Downsample to ~200Hz for speed
   const step    = Math.floor(sr / 200);
+  const rate    = sr / step;   // actual frames per second after downsampling
   const samples = [];
   for (let i = 0; i < data.length; i += step) {
     let sum = 0;
@@ -963,7 +1535,7 @@ async function analyseAudioForBPM(arrayBuffer) {
   // Compute inter-onset intervals
   const intervals = [];
   for (let i = 1; i < onsets.length; i++) {
-    intervals.push((onsets[i] - onsets[i-1]) / 200); // in seconds
+    intervals.push((onsets[i] - onsets[i-1]) / rate); // in seconds
   }
 
   // Find dominant interval via histogram (cluster nearby intervals)
@@ -982,61 +1554,49 @@ async function analyseAudioForBPM(arrayBuffer) {
   const bpm = 60 / bestInterval;
   if (bpm < 50 || bpm > 250) return null;
 
-  return { interval: bestInterval, bpm: Math.round(bpm) };
+  // First-beat phase: where the grid sits relative to the real onsets
+  const ref = (onsets[0] / rate) % bestInterval;
+  let dsum = 0, dn = 0;
+  onsets.forEach(i => {
+    let d = (((i / rate) - ref) % bestInterval + bestInterval) % bestInterval;
+    if (d > bestInterval / 2) d -= bestInterval;
+    if (Math.abs(d) < 0.06) { dsum += d; dn++; }
+  });
+  const phase = (((ref + (dn ? dsum / dn : 0)) % bestInterval) + bestInterval) % bestInterval;
+
+  return { interval: bestInterval, bpm: Math.round(bpm), phase };
 }
 
-// The running beat clock — fires onBeat() at each scheduled interval
-let beatClockRafId = null;
-
-function startBeatClock(interval) {
-  stopBeatClock();
-  S.det.detectedInterval = interval;
-  S.det.nextBeatActx = S.actx.currentTime + interval;
-  S.det.clockSeeded = true;
-
-  function tick() {
-    if (!S.playing || S.det.clockSource !== 'audio') return;
-    const now = S.actx.currentTime;
-    while (S.det.nextBeatActx <= now + 0.05) {
-      const delay = Math.max(0, (S.det.nextBeatActx - now) * 1000);
-      const t = S.det.nextBeatActx;
-      setTimeout(() => {
-        if (S.playing && S.det.clockSource === 'audio') onBeat();
-      }, delay);
-      S.det.nextBeatActx += interval;
-    }
-    beatClockRafId = requestAnimationFrame(tick);
-  }
-  beatClockRafId = requestAnimationFrame(tick);
+// ── MEDIA-TIME BEAT CLOCK ─────────────────────────────────────────────────────
+// Beats are read from the playing media's own currentTime, so the clock stays locked
+// to the music through loops, rewinds and seeks. "phase" = time of the first true beat.
+function clockSrc() {
+  if (!S.playing) return null;
+  if (S.base.loaded && S.base.sync && S.base.interval)
+    return {key:'base',  el:S.base.video, interval:S.base.interval, phase:S.base.phase||0};
+  if (S.beatEl && S.det.detectedInterval)
+    return {key:'audio', el:S.beatEl,     interval:S.det.detectedInterval, phase:S.det.detectedPhase||0};
+  return null;
 }
-
-function stopBeatClock() {
-  if (beatClockRafId) { cancelAnimationFrame(beatClockRafId); beatClockRafId = null; }
-  S.det.clockSeeded = false;
+let lastBeatN = null, lastBeatKey = null;
+function clockLoop() {
+  requestAnimationFrame(clockLoop);
+  organAuto();
+  const c = clockSrc();
+  if (!c) { lastBeatN = null; lastBeatKey = null; return; }
+  const n = Math.floor((c.el.currentTime - c.phase) / c.interval);
+  if (c.key !== lastBeatKey || lastBeatN === null || n < lastBeatN) { lastBeatKey = c.key; lastBeatN = n; return; }
+  if (n > lastBeatN && !c.el.paused) { lastBeatN = n; onBeat(); }
 }
-
-// Stub — no longer needed as real-time loop, kept for compatibility
-function detectBeats() { requestAnimationFrame(detectBeats); }
 
 function updateDetectedBpmUI(bpm) {
   ['det-bpm-m','det-bpm-d'].forEach(id => { const el=$(id); if(el) el.textContent = bpm; });
 }
 
-// Decide which clock source is active and show/hide the BEAT SYNC badge
+// Clock priority: base video (if sync on) > audio track > metronome
 function updateClockSource() {
-  const hasAudio = S.playing;
-  const hasMetro = S.metro.on;
-  if (hasAudio) {
-    S.det.clockSource = 'audio';
-  } else if (hasMetro) {
-    S.det.clockSource = 'metro';
-  } else {
-    S.det.clockSource = 'none';
-  }
-  const active = S.det.clockSource !== 'none';
-  [$('quant-badge-m'), $('quant-badge-d')].forEach(el => {
-    if (el) el.classList.toggle('on', active);
-  });
+  const c = clockSrc();
+  S.det.clockSource = c ? c.key : (S.metro.on ? 'metro' : 'none');
 }
 
 // ── METRONOME ─────────────────────────────────────────────────────────────────
@@ -1119,89 +1679,222 @@ function setupMetro() {
 
 // ── BEAT PLAYER / AUDIO TRACK ─────────────────────────────────────────────────
 function setupBeat() {
-  const barBtn = $('play-beat-bar');
-  if (barBtn) barBtn.innerHTML = PLAY;
-
   const onUp = async e => {
     const f = e.target.files[0]; if (!f) return;
+    if (S.recording) { showToast('Stop recording first'); return; }
     ensureActx();
-    if (S.beatEl) { S.beatEl.pause(); S.beatEl.currentTime = 0; }
-    stopBeatClock();
+    stopAll();
+    if (S.beatGain) { try { S.beatGain.disconnect(); } catch(_) {} }
 
-    const url = URL.createObjectURL(f);
-    const audio = new Audio(url);
+    const audio = new Audio(URL.createObjectURL(f));
     audio.loop = false;
-    S.beatEl = audio; S.playing = false;
-    S.det.detectedInterval = null; S.det.detectedBpm = null;
+    S.beatEl = audio;
+    S.det.detectedInterval = null; S.det.detectedBpm = null; S.det.detectedPhase = 0;
+    S.det.harm = null; S.det.harmBusy = true;
     updateDetectedBpmUI('analysing…');
 
-    // Audio graph: source → vizAn → gain → speakers
-    const src   = S.actx.createMediaElementSource(audio);
-    const vizAn = S.actx.createAnalyser(); vizAn.fftSize = 64;
-    S.beatAn = vizAn; S.beatData = new Uint8Array(vizAn.frequencyBinCount);
-    const gn = S.actx.createGain();
+    // source → gain → speakers (+ shared visualiser analyser)
+    const src = S.actx.createMediaElementSource(audio);
+    const gn  = S.actx.createGain();
     gn.gain.value = parseFloat($('vol-beat-m')?.value || .7);
-    src.connect(vizAn); vizAn.connect(gn); gn.connect(S.actx.destination);
+    src.connect(gn); gn.connect(S.actx.destination); gn.connect(S.gAn);
     S.beatGain = gn;
-
-    // Offline BPM analysis
-    try {
-      const buf = await f.arrayBuffer();
-      const result = await analyseAudioForBPM(buf);
-      if (result) {
-        S.det.detectedInterval = result.interval;
-        S.det.detectedBpm = result.bpm;
-        updateDetectedBpmUI(result.bpm);
-      } else {
-        updateDetectedBpmUI('—');
-      }
-    } catch(err) { updateDetectedBpmUI('—'); }
-
-    audio.addEventListener('ended', () => {
-      audio.currentTime = 0;
-      S.playing = false;
-      stopBeatClock();
-      if (barBtn) barBtn.innerHTML = PLAY;
-      updateClockSource();
-    });
+    audio.addEventListener('ended', () => onPassEnd(audio));
 
     const short = f.name.replace(/\.[^.]+$/, '').substring(0, 22);
     ['beat-name-m','beat-name-d'].forEach(id => { const el=$(id); if(!el) return; el.textContent=short; el.classList.remove('hidden'); });
-    if (barBtn) { barBtn.disabled = false; barBtn.innerHTML = PLAY; }
+    updateTransportUI(); updateClockSource();
     showToast('Track loaded', 'success');
-  };
 
-  const onToggle = () => {
-    if (!S.beatEl) return;
-    S.playing = !S.playing;
-    if (S.playing) {
-      S.beatEl.currentTime = 0;
-      S.beatEl.play();
-      if (S.det.detectedInterval) {
-        updateClockSource(); // set clockSource first
-        startBeatClock(S.det.detectedInterval);
-      } else {
-        updateClockSource();
-      }
-    } else {
-      S.beatEl.pause();
-      S.beatEl.currentTime = 0;
-      stopBeatClock();
-      updateClockSource();
-    }
-    if (barBtn) barBtn.innerHTML = S.playing ? STOP : PLAY;
+    try {
+      const m = await analyseMedia(await f.arrayBuffer());
+      if (S.beatEl !== audio) return;
+      const r = m.tempo;
+      if (r) {
+        S.det.detectedInterval = r.interval; S.det.detectedBpm = r.bpm; S.det.detectedPhase = r.phase;
+        updateDetectedBpmUI(r.bpm);
+      } else updateDetectedBpmUI('—');
+      S.det.harm = m.harmony;
+    } catch(err) { updateDetectedBpmUI('—'); }
+    if (S.beatEl !== audio) return;
+    S.det.harmBusy = false;
+    updateClockSource(); onHarmony();
   };
 
   ['audio-m','audio-d'].forEach(id => $(id)?.addEventListener('change', onUp));
-  if (barBtn) barBtn.addEventListener('click', onToggle);
+  ['play-beat-bar','play-beat-d'].forEach(id => $(id)?.addEventListener('click', transportToggle));
+  ['loop-bar','loop-d'].forEach(id => $(id)?.addEventListener('click', loopToggle));
   ['vol-beat-m','vol-beat-d'].forEach(id => {
     $(id)?.addEventListener('input', e => { if(S.beatGain) S.beatGain.gain.value=parseFloat(e.target.value); });
   });
 }
 
-function setBeatBtnUI(playing) {
-  const barBtn = $('play-beat-bar');
-  if (barBtn) barBtn.innerHTML = playing ? STOP : PLAY;
+function clearAudio() {
+  stopAll();
+  if (S.beatGain) { try { S.beatGain.disconnect(); } catch(_) {} }
+  S.beatEl = null; S.beatGain = null;
+  S.det.detectedInterval = null; S.det.detectedBpm = null; S.det.detectedPhase = 0;
+  updateDetectedBpmUI('—');
+  S.det.harm = null; S.det.harmBusy = false;
+  ['beat-name-m','beat-name-d'].forEach(id => { const el=$(id); if(el){ el.textContent=''; el.classList.add('hidden'); } });
+  ['audio-m','audio-d'].forEach(id => { const el=$(id); if(el) el.value=''; });
+  updateTransportUI(); updateClockSource(); onHarmony();
+}
+
+// ── TRANSPORT (base video + audio track play together) ────────────────────────
+function primaryEl()  { return S.base.loaded ? S.base.video : S.beatEl; }
+function backingEls() { const a=[]; if (S.base.loaded) a.push(S.base.video); if (S.beatEl) a.push(S.beatEl); return a; }
+
+function playBacking() {
+  const els = backingEls(); if (!els.length) return;
+  ensureActx();
+  els.forEach(el => { el.currentTime = 0; el.play().catch(()=>{}); });
+  S.playing = true; lastBeatN = null;
+  updateClockSource(); updateTransportUI();
+}
+function stopBacking() {
+  organAutoStop();
+  backingEls().forEach(el => { el.pause(); el.currentTime = 0; });
+  S.playing = false; lastBeatN = null;
+  updateClockSource(); updateTransportUI();
+}
+function transportToggle() {
+  if (S.recording) { showToast('Stop recording first'); return; }
+  if (!backingEls().length) return;
+  if (S.playing) stopBacking(); else playBacking();
+}
+function loopToggle() {
+  S.loop = !S.loop; updateTransportUI();
+  showToast(S.loop ? 'Loop on — rehearse freely' : 'Loop off', 'success');
+}
+// The longest-running source (base if loaded, else audio track) ending = end of the pass
+function onPassEnd(el) {
+  if (!S.playing || el !== primaryEl()) return;
+  if (S.recording) { stopRec(); return; }   // recording captures exactly one pass
+  if (S.loop) playBacking(); else stopBacking();
+}
+function updateTransportUI() {
+  const has = backingEls().length > 0;
+  ['play-beat-bar','play-beat-d'].forEach(id => { const b=$(id); if(!b) return; b.disabled=!has; b.innerHTML = S.playing ? STOP : PLAY; });
+  ['loop-bar','loop-d'].forEach(id => { const b=$(id); if(b) b.classList.toggle('active', S.loop); });
+}
+
+// ── BASE VIDEO (CH 00) ────────────────────────────────────────────────────────
+function buildBase() {
+  const inner = p => `
+    <div class="card-hdr"><span class="card-lbl">Base Video · CH 00</span><span class="font-mono" style="font-size:9px;color:var(--muted)">OPTIONAL</span></div>
+    <div class="base-body">
+      <input type="file" id="vid-base-${p}" accept="video/*" onchange="loadBase(this)">
+      <div class="base-drop" onclick="$('vid-base-${p}').click()">
+        <div class="base-ico">${FILM}</div>
+        <div class="base-info"><div class="base-name" id="base-name-${p}"></div><div class="base-meta" id="base-meta-${p}"></div></div>
+        <div class="spin" id="base-loader-${p}" style="display:none;"></div>
+        <button class="base-clear" onclick="event.stopPropagation();clearBase()" title="Remove base video">✕</button>
+      </div>
+      <div class="base-toggles">
+        <button class="sync-btn" id="base-mute-${p}" onclick="baseMuteToggle()"><div class="sync-btn-dot"></div><span>Mute base</span></button>
+        <button class="sync-btn" id="base-sync-${p}" onclick="baseSyncToggle()"><div class="sync-btn-dot"></div><span>Sync to base</span></button>
+      </div>
+    </div>`;
+  ['m','d'].forEach(p => { const el=$(`base-slot-${p}`); if (el) el.innerHTML = `<div class="base-card" id="base-card-${p}">${inner(p)}</div>`; });
+}
+
+function ensureBaseGraph() {
+  if (S.base.gain) return;
+  const v = $('src-0');
+  const node = S.actx.createMediaElementSource(v);
+  const g = S.actx.createGain();
+  g.gain.value = S.base.muted ? 0 : 1;
+  node.connect(g); g.connect(S.actx.destination); g.connect(S.gAn);
+  S.base.gain = g;
+  v.addEventListener('ended', () => onPassEnd(v));
+}
+
+window.loadBase = input => {
+  const f = input.files[0]; input.value = '';
+  if (!f) return;
+  loadBaseFile(f, f.name.replace(/\.[^.]+$/, '').substring(0, 24));
+};
+
+async function loadBaseFile(f, name) {
+  if (S.recording) { showToast('Stop recording first'); return; }
+  if (f.size > 300*1024*1024) { showToast('File too large (max 300MB)'); return; }
+  ensureActx();
+  stopAll();
+  const b = S.base, v = $('src-0');
+  if (b.url) URL.revokeObjectURL(b.url);
+  Object.assign(b, {loaded:false, loading:true, analysing:false, interval:null, phase:0, bpm:null, dur:0, name, harm:null});
+  const url = URL.createObjectURL(f); b.url = url;
+  updateBaseUI(); updateTransportUI(); updateClockSource(); updateNoSignal();
+  ensureBaseGraph();
+  try {
+    await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = rej; v.src = url; v.load(); });
+    // Recorded WebM takes report duration = Infinity until the end has been seen
+    if (!isFinite(v.duration)) {
+      await new Promise(r => { v.ontimeupdate = () => { v.ontimeupdate = null; r(); }; v.currentTime = 1e101; });
+      v.currentTime = 0;
+    }
+  } catch(err) {
+    b.loading = false; b.url = null; updateBaseUI();
+    showToast('Error loading base video'); return;
+  }
+  v.onerror = null; v.onloadedmetadata = null;
+  Object.assign(b, {loaded:true, loading:false, video:v, dur:v.duration});
+  b.analysing = f.size < 200*1024*1024;
+  updateBaseUI(); updateTransportUI(); updateClockSource(); updateNoSignal();
+  showToast('Base video ready', 'success');
+  if (!b.analysing) return;
+  try {
+    const m = await analyseMedia(await f.arrayBuffer());
+    if (b.url === url) {
+      if (m.tempo) { b.interval = m.tempo.interval; b.phase = m.tempo.phase; b.bpm = m.tempo.bpm; }
+      b.harm = m.harmony;
+    }
+  } catch(_) {}
+  if (b.url !== url) return;
+  b.analysing = false;
+  updateBaseUI(); updateClockSource(); onHarmony();
+}
+
+function clearBase() {
+  if (S.recording) { showToast('Stop recording first'); return; }
+  stopAll();
+  const b = S.base, v = $('src-0');
+  if (b.url) URL.revokeObjectURL(b.url);
+  v.removeAttribute('src'); v.load();
+  Object.assign(b, {loaded:false, loading:false, analysing:false, url:null, interval:null, phase:0, bpm:null, dur:0, name:'', harm:null});
+  updateBaseUI(); updateTransportUI(); updateClockSource(); updateNoSignal(); onHarmony();
+}
+
+function baseMuteToggle() {
+  S.base.muted = !S.base.muted;
+  if (S.base.gain) S.base.gain.gain.value = S.base.muted ? 0 : 1;
+  updateBaseUI();
+}
+function baseSyncToggle() {
+  S.base.sync = !S.base.sync;
+  updateBaseUI(); updateClockSource();
+}
+
+function updateBaseUI() {
+  updateOrganUI();
+  const b = S.base;
+  ['m','d'].forEach(p => {
+    const card = $(`base-card-${p}`); if (!card) return;
+    card.classList.toggle('loaded', b.loaded);
+    $(`base-name-${p}`).textContent = b.loaded ? b.name : (b.loading ? b.name : 'Tap to load a base video');
+    $(`base-meta-${p}`).textContent = b.loading ? 'Loading…'
+      : b.loaded ? `${fmt(b.dur)} · ${b.analysing ? 'listening to the music…' : (b.bpm ? b.bpm + ' BPM' : 'no beat found')}`
+      : 'Optional · clips play on top of it';
+    const l = $(`base-loader-${p}`); if (l) l.style.display = b.loading ? 'block' : 'none';
+    const mu = $(`base-mute-${p}`); mu.classList.toggle('active', b.muted); mu.querySelector('span').textContent = b.muted ? 'Muted' : 'Mute base';
+    const sy = $(`base-sync-${p}`); sy.classList.toggle('active', b.sync && !!b.interval); sy.classList.toggle('nobeat', !b.interval);
+  });
+}
+
+function updateNoSignal() {
+  const show = !S.base.loaded && !S.active && !(typeof FX !== 'undefined' && FX.on);
+  ['no-sig-m','no-sig-d'].forEach(id => { const el=$(id); if(el) el.style.opacity = show ? '1' : '0'; });
 }
 
 // ── VIDEO LOAD ────────────────────────────────────────────────────────────────
@@ -1256,11 +1949,13 @@ function updatePads(ch) {
     el.classList.add('loaded');
     const lbl = el.querySelector('.pad-lbl,.d-pad-lbl'); if(lbl) lbl.textContent=name;
   });
+  if (S.org.mode) refreshPads();
 }
 
 // ── SYNC TOGGLE ───────────────────────────────────────────────────────────────
 window.syncToggle = function() {
   S.quantise = !S.quantise;
+  if (!S.quantise) organFlushPending();
   ['sync-btn-m','sync-btn-d'].forEach(id => {
     const el=$(id); if(!el) return;
     el.classList.toggle('active', S.quantise);
@@ -1274,12 +1969,14 @@ function initSyncUI() {
 
 // ── TRIGGERS ──────────────────────────────────────────────────────────────────
 function triggerPress(ch) {
+  if (S.org.mode) { organPress(ch); return; }
   if (!S.ch[ch].loaded) return;
   S.held = ch;
   fireClip(ch);
 }
 
 function triggerRelease(ch) {
+  if (S.org.mode) { organRelease(ch); return; }
   if (S.held === ch) S.held = null;
 
   if (S.active === ch) {
@@ -1288,7 +1985,7 @@ function triggerRelease(ch) {
     document.querySelectorAll(`[data-ch="${ch}"]`).forEach(el =>
       el.classList.remove('active', 'glow-active'));
     S.active = null;
-    updateNoSig();
+    updateNoSignal();
   }
 }
 
@@ -1317,10 +2014,8 @@ function stopAll() {
   Object.values(S.ch).forEach(c => { if(c.video) c.video.pause(); });
   document.querySelectorAll('[data-ch]').forEach(el => el.classList.remove('active','glow-active'));
   S.active = null;
-  updateNoSig();
-  if (S.beatEl) { S.beatEl.pause(); S.beatEl.currentTime = 0; S.playing=false; stopBeatClock(); updateClockSource(); }
-  const barBtn = $('play-beat-bar'); if (barBtn) barBtn.innerHTML = PLAY;
-  if (S.metro.on) metroToggle();
+  stopBacking();
+  updateNoSignal();
 }
 
 function setRecUI(on) {
@@ -1338,7 +2033,8 @@ function setRecUI(on) {
 }
 
 async function startRec() {
-  if (!Object.values(S.ch).some(c => c.loaded)) { showToast('Load a clip first','error'); return; }
+  if (S.recording) return;
+  if (!S.base.loaded && !Object.values(S.ch).some(c => c.loaded)) { showToast('Load a clip first','error'); return; }
   ensureActx();
   const cvs = $(mob()?'canvas-m':'canvas-d');
   let stream; try { stream = cvs.captureStream(30); } catch(e) { showToast('Recording not supported','error'); return; }
@@ -1355,8 +2051,10 @@ async function startRec() {
     } catch(e) {}
   });
 
-  // Route beat/audio track into recording (beatGain → dest)
+  // Audio track + base video audio (a muted base has gain 0, so it is silent here too)
   if (S.beatGain) S.beatGain.connect(dest);
+  if (S.base.gain) S.base.gain.connect(dest);
+  ensureOrgan(); S.org.out.connect(dest);
 
   // Metronome gainNode is intentionally NOT connected to dest
 
@@ -1370,14 +2068,21 @@ async function startRec() {
   S.mediaRec.ondataavailable = e => { if(e.data.size>0) S.chunks.push(e.data); };
   S.mediaRec.onstop = () => {
     try { if(S.beatGain) S.beatGain.disconnect(dest); } catch(e) {}
-    stopAll();
+    try { if(S.base.gain) S.base.gain.disconnect(dest); } catch(e) {}
+    try { if(S.org.out) S.org.out.disconnect(dest); } catch(e) {}
+    stopAll();   // rewinds the backing so the next pass starts clean
     const t = S.mediaRec.mimeType||'video/webm', ext = t.includes('mp4')?'mp4':'webm';
-    const url = URL.createObjectURL(new Blob(S.chunks, {type:t}));
+    const blob = new Blob(S.chunks, {type:t});
+    if (S.lastTake) URL.revokeObjectURL(S.lastTake.url);
+    S.takeNo++;
+    S.lastTake = {blob, url:URL.createObjectURL(blob), ext, n:S.takeNo};
+    const tn = $('take-no'); if (tn) tn.textContent = `Pass ${S.takeNo} is ready`;
     $('modal-exp').classList.remove('hidden');
-    $('btn-download').onclick = () => { const a=document.createElement('a'); a.href=url; a.download=`vjdeck-${Date.now()}.${ext}`; a.click(); };
-    $('btn-watch').onclick    = () => { const w=window.open(); if(w) w.document.write(`<video src="${url}" controls autoplay style="width:100%;height:100%;background:#000"></video>`); };
   };
-  S.mediaRec.start(100); S.recording=true; setRecUI(true); showToast('Recording…','success');
+  S.mediaRec.start(100); S.recording=true; setRecUI(true);
+  // Backing (base video + audio track) always starts from the very beginning
+  if (backingEls().length) playBacking();
+  showToast(backingEls().length ? 'Recording one pass…' : 'Recording…','success');
 }
 
 function stopRec() {
@@ -1385,23 +2090,51 @@ function stopRec() {
   S.mediaRec.stop(); S.recording=false; setRecUI(false); showToast('Processing…','success');
 }
 
+function closeModal() { $('modal-exp').classList.add('hidden'); }
+
 function setupRec() {
   ['btn-rec-m','btn-rec-d'].forEach(id => $(id)?.addEventListener('click', () => S.recording?stopRec():startRec()));
-  $('btn-close')?.addEventListener('click', () => $('modal-exp').classList.add('hidden'));
+  $('btn-close')?.addEventListener('click', closeModal);
+  $('btn-download').onclick = () => {
+    const t = S.lastTake; if (!t) return;
+    const a = document.createElement('a'); a.href = t.url; a.download = `vjdeck-${Date.now()}.${t.ext}`; a.click();
+  };
+  $('btn-watch').onclick = () => {
+    const t = S.lastTake; if (!t) return;
+    const w = window.open(); if (w) w.document.write(`<video src="${t.url}" controls autoplay style="width:100%;height:100%;background:#000"></video>`);
+  };
+  // Redo pass: throw this take away, rewind everything, ready to record again
+  $('btn-redo').onclick = () => {
+    if (S.lastTake) { URL.revokeObjectURL(S.lastTake.url); S.lastTake = null; }
+    closeModal(); stopAll();
+    showToast('Take discarded — press Record','success');
+  };
+  // Add as layer: the take becomes the new base video (CH 00)
+  $('btn-layer').onclick = () => {
+    const t = S.lastTake; if (!t) return;
+    closeModal();
+    if (S.beatEl) { clearAudio(); showToast('Audio track removed (it is already in the take)','success'); }
+    loadBaseFile(t.blob, `Layer ${t.n}`);
+  };
 }
 
 // ── RENDER LOOP ───────────────────────────────────────────────────────────────
+function drawFit(ctx, v, cvs) {
+  if (!v.videoWidth) return;
+  const sc = Math.min(cvs.width/v.videoWidth, cvs.height/v.videoHeight);
+  ctx.drawImage(v, (cvs.width-v.videoWidth*sc)/2, (cvs.height-v.videoHeight*sc)/2, v.videoWidth*sc, v.videoHeight*sc);
+}
 function renderLoop() {
   const cvs = $(mob()?'canvas-m':'canvas-d');
   if (cvs) {
     const ctx = cvs.getContext('2d');
     ctx.fillStyle = '#000'; ctx.fillRect(0,0,cvs.width,cvs.height);
+    // CH 00 base video sits underneath
+    if (S.base.loaded && S.base.video && S.base.video.readyState >= 2) drawFit(ctx, S.base.video, cvs);
+    // triggered clip on top
     if (S.active) {
       const v = S.ch[S.active].video;
-      if (v && !v.paused) {
-        const sc = Math.min(cvs.width/v.videoWidth, cvs.height/v.videoHeight);
-        ctx.drawImage(v, (cvs.width-v.videoWidth*sc)/2, (cvs.height-v.videoHeight*sc)/2, v.videoWidth*sc, v.videoHeight*sc);
-      }
+      if (v && !v.paused) drawFit(ctx, v, cvs);
     }
     // Howlround: feed this frame into the feedback loop, paint the result back
     if (FX.on && HR && HR.render(cvs)) ctx.drawImage(HR.canvas, 0, 0, cvs.width, cvs.height);
@@ -1412,18 +2145,20 @@ function renderLoop() {
 // ── VISUALISER ────────────────────────────────────────────────────────────────
 function drawViz() {
   requestAnimationFrame(drawViz);
+  ['chord-m','chord-d'].forEach(id => { const c = $(id); if (c && fitCanvas(c)) drawChords(c, true); });
   // Mobile uses the bar canvas; desktop uses the sidebar canvas
-  const cvs = $(mob() ? 'viz-bar' : 'viz-d'); if(!cvs) return;
+  const cvs = $(mob() ? 'viz-bar' : 'viz-d'); if(!cvs || !fitCanvas(cvs)) return;
+  if (mob() && S.org.mode && drawChords(cvs, false)) return;   // Organ mode: upcoming chords in the bar
   const ctx = cvs.getContext('2d'); ctx.clearRect(0,0,cvs.width,cvs.height);
-  if (!S.beatAn || !S.playing) {
+  if (!S.gAn || (!S.playing && !Object.keys(S.org.padVoice).length)) {
     ctx.strokeStyle='rgba(255,255,255,0.05)'; ctx.lineWidth=1;
     ctx.beginPath(); ctx.moveTo(0,cvs.height/2); ctx.lineTo(cvs.width,cvs.height/2); ctx.stroke();
     return;
   }
-  S.beatAn.getByteFrequencyData(S.beatData);
-  const bw = (cvs.width/S.beatAn.frequencyBinCount)*2.5; let x=0;
-  for (let i=0; i<S.beatAn.frequencyBinCount; i++) {
-    const h=(S.beatData[i]/255)*cvs.height*.9, hue=160+(i/S.beatAn.frequencyBinCount)*40;
+  S.gAn.getByteFrequencyData(S.gData);
+  const bw = (cvs.width/S.gAn.frequencyBinCount)*2.5; let x=0;
+  for (let i=0; i<S.gAn.frequencyBinCount; i++) {
+    const h=(S.gData[i]/255)*cvs.height*.9, hue=160+(i/S.gAn.frequencyBinCount)*40;
     ctx.fillStyle=`hsla(${hue},100%,62%,.8)`;
     ctx.beginPath();
     if (ctx.roundRect) ctx.roundRect(x,cvs.height-h,bw,h,2); else ctx.rect(x,cvs.height-h,bw,h);
@@ -1442,10 +2177,11 @@ function showToast(msg, type='error') {
 function fmt(s){return`${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
-buildUI(); setupMetro(); setupBeat(); setupTriggers(); setupRec(); initSyncUI(); setupFx();
+buildUI(); buildBase(); buildOrgan(); setupMetro(); setupBeat(); setupTriggers(); setupRec(); initSyncUI();
+updateTransportUI(); updateBaseUI(); refreshPads(); setupFx();
 requestAnimationFrame(renderLoop);
 requestAnimationFrame(drawViz);
-requestAnimationFrame(detectBeats);
+requestAnimationFrame(clockLoop);
 </script>
 </body>
 </html>
